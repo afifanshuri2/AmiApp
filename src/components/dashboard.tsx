@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
-  Heart,
   LayoutDashboard,
   NotebookPen,
   Flag,
@@ -23,6 +22,7 @@ import { kinds, type Entry, type Kind, type Profile } from "../lib/types";
 import { supabase } from "../lib/supabase";
 import { Button } from "./ui/button";
 import { EntryEditor, type EntryInput } from "./entry-editor";
+import { Logo } from "./logo";
 const icons = [
   NotebookPen,
   Flag,
@@ -133,14 +133,12 @@ export function Dashboard({
     const ok = await mutate(() =>
       current.entry
         ? client.from("entries").update(data).eq("id", current.entry.id)
-        : client
-            .from("entries")
-            .insert({
-              ...data,
-              kind: current.kind,
-              couple_id: profile.couple_id,
-              created_by: profile.id,
-            }),
+        : client.from("entries").insert({
+            ...data,
+            kind: current.kind,
+            couple_id: profile.couple_id,
+            created_by: profile.id,
+          }),
     );
     if (ok) setEditor(null);
   }
@@ -281,7 +279,7 @@ export function Dashboard({
     <div className="app-shell" data-theme={theme}>
       <aside className="sidebar">
         <a className="wordmark" href="#" onClick={() => setView("Dashboard")}>
-          <Heart fill="currentColor" /> AmiApp<span>✦</span>
+          <Logo />
         </a>
         <p className="sidebar-caption">A LITTLE SPACE FOR US</p>
         <nav aria-label="Main navigation">

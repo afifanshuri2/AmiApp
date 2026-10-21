@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <title>AmiApp — two little lovebirds, one heart</title>
+  <path d="M48 88C43 83 8 61 8 36C8 13 34 9 48 27C62 9 88 13 88 36C88 61 53 83 48 88Z" fill="#B96379"/>
+  <path d="M29 29C19 29 17 38 21 47C26 58 35 65 45 72V42C45 34 38 29 29 29Z" fill="#FFF8EE"/>
+  <path d="M67 29C77 29 79 38 75 47C70 58 61 65 51 72V42C51 34 58 29 67 29Z" fill="#FFF8EE"/>
+  <circle cx="35" cy="40" r="2.5" fill="#67414D"/>
+  <circle cx="61" cy="40" r="2.5" fill="#67414D"/>
+  <circle cx="34.3" cy="39.2" r=".7" fill="white"/>
+  <circle cx="61.7" cy="39.2" r=".7" fill="white"/>
+  <ellipse cx="27" cy="47" rx="4" ry="2.6" fill="#EAB4BC"/>
+  <ellipse cx="69" cy="47" rx="4" ry="2.6" fill="#EAB4BC"/>
+  <path d="M43 44L48 48L43 52V44ZM53 44L48 48L53 52V44Z" fill="#EDBA8A"/>
+  <path d="M27 54C30 58 34 61 38 63M69 54C66 58 62 61 58 63" stroke="#D995A2" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M48 3L50.2 8.8L56 11L50.2 13.2L48 19L45.8 13.2L40 11L45.8 8.8L48 3Z" fill="#D995A2"/>
+</svg>

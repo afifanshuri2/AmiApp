@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Heart, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Logo } from "./logo";
 import { supabase, usernameEmail } from "../lib/supabase";
 import { Button } from "./ui/button";
 export function Auth() {
@@ -42,7 +43,7 @@ export function Auth() {
     <main className="auth-shell">
       <section className="auth-form">
         <h1 className="wordmark">
-          <Heart fill="currentColor" /> AmiApp
+          <Logo />
         </h1>
         {register && (
           <div className="role-options">

@@ -79,6 +79,42 @@ p {
 .wordmark svg {
   width: 24px;
 }
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand-lockup img {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+}
+.brand-name {
+  font-family: ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1.8px;
+  color: var(--accent);
+}
+.auth-form .brand-lockup {
+  flex-direction: column;
+  gap: 9px;
+}
+.auth-form .brand-lockup img {
+  width: 78px;
+  height: 78px;
+}
+.auth-form .brand-name {
+  font-size: 36px;
+  letter-spacing: -2px;
+}
+.sidebar .brand-lockup img {
+  width: 36px;
+  height: 36px;
+}
+.sidebar .brand-name {
+  font-size: 26px;
+}
 .wordmark > span {
   font-size: 16px;
   align-self: flex-start;
