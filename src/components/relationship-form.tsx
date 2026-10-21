@@ -1,4 +1,7 @@
 "use client";
+import { Card } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { todayDate } from "../lib/relationship";
@@ -41,7 +44,7 @@ export function RelationshipForm({
     }
   }
   return (
-    <section className="card relationship-form">
+    <Card className="card relationship-form">
       <p className="eyebrow">OUR STORY</p>
       <h2>
         {onboarding ? "When did your story begin?" : "Relationship settings"}
@@ -57,16 +60,16 @@ export function RelationshipForm({
           void save(date || null);
         }}
       >
-        <label>
+        <Label>
           Together since
-          <input
+          <Input
             type="date"
             value={date}
             max={todayDate()}
             disabled={busy}
             onChange={(e) => setDate(e.target.value)}
           />
-        </label>
+        </Label>
         <Button disabled={busy}>
           {busy ? "Saving…" : onboarding ? "Continue ♡" : "Save changes"}
         </Button>
@@ -102,6 +105,6 @@ export function RelationshipForm({
           {message}
         </p>
       )}
-    </section>
+    </Card>
   );
 }

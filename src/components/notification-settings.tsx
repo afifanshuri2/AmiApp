@@ -1,4 +1,5 @@
 "use client";
+import { Card } from "./ui/card";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import {
@@ -52,7 +53,7 @@ export function NotificationSettings({ userId }: { userId: string }) {
     }
   }
   return (
-    <section className="card notification-settings">
+    <Card className="card notification-settings">
       <h2>Notes from your person</h2>
       <p className="muted">
         Get a push alert and an unread badge when your partner leaves a
@@ -70,6 +71,6 @@ export function NotificationSettings({ userId }: { userId: string }) {
             : "Enable notifications"}
       </Button>
       {message && <p role="status">{message}</p>}
-    </section>
+    </Card>
   );
 }

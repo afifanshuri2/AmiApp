@@ -1,4 +1,7 @@
 "use client";
+import { Label } from "./ui/label";
+import { NativeSelect } from "./ui/native-select";
+import { NativeSelectOption } from "./ui/native-select";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -206,13 +209,13 @@ export function Dashboard({
         </div>
         <p className="muted section-hint">{hints[kind]}</p>
         {kind === "FoodToTry" && !compact && (
-          <label className="food-filter">
+          <Label className="food-filter">
             Filter by category
-            <select
+            <NativeSelect
               value={foodCategory}
               onChange={(e) => setFoodCategory(e.target.value)}
             >
-              <option value="">All categories</option>
+              <NativeSelectOption value="">All categories</NativeSelectOption>
               {Array.from(
                 new Set([
                   ...foodCategories,
@@ -223,10 +226,12 @@ export function Dashboard({
               )
                 .sort()
                 .map((category) => (
-                  <option key={category}>{category}</option>
+                  <NativeSelectOption key={category}>
+                    {category}
+                  </NativeSelectOption>
                 ))}
-            </select>
-          </label>
+            </NativeSelect>
+          </Label>
         )}
         {list.length ? (
           <div className="entry-list">
@@ -587,6 +592,7 @@ export function Dashboard({
       </div>
       {editor && (
         <EntryEditor
+          theme={theme}
           kind={editor.kind}
           entry={editor.entry}
           busy={busy}

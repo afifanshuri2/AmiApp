@@ -1,5 +1,9 @@
 "use client";
-import { useEffect, useId, useRef } from "react";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Label } from "./ui/label";
+import { NativeSelectOption } from "./ui/native-select";
+import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { foodCategories, type Entry, type Kind } from "../lib/types";
@@ -15,37 +19,38 @@ export type EntryInput = Pick<
 >;
 export function EntryEditor({
   kind,
+  theme,
   entry,
   busy,
   save,
   close,
 }: {
   kind: Kind;
+  theme: string;
   entry?: Entry;
   busy: boolean;
   save: (data: EntryInput) => Promise<void>;
   close: () => void;
 }) {
-  const id = useId();
-  const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    dialog.current?.showModal();
-  }, []);
   return (
-    <div className="modal-backdrop">
-      <dialog
-        ref={dialog}
-        aria-modal="true"
-        aria-labelledby={id}
-        onCancel={(e) => {
-          e.preventDefault();
-          if (!busy) close();
-        }}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !busy) close();
+      }}
+    >
+      <DialogContent
+        className="entry-dialog"
+        data-theme={theme}
+        showCloseButton={false}
+        aria-describedby={undefined}
       >
         <div className="section-heading">
-          <h2 id={id}>
-            {entry ? "Edit a little thing" : "Make room for something good"}
-          </h2>
+          <DialogTitle asChild>
+            <h2>
+              {entry ? "Edit a little thing" : "Make room for something good"}
+            </h2>
+          </DialogTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -76,9 +81,9 @@ export function EntryEditor({
             });
           }}
         >
-          <label>
+          <Label>
             {kind === "FoodToTry" ? "Food or dish to try" : "Title"}
-            <input
+            <Input
               name="title"
               defaultValue={entry?.title}
               required
@@ -89,12 +94,12 @@ export function EntryEditor({
                   : "Something we’ll do together…"
               }
             />
-          </label>
+          </Label>
           {kind === "FoodToTry" && (
             <>
-              <label>
+              <Label>
                 Category
-                <input
+                <Input
                   name="category"
                   list="food-categories"
                   maxLength={40}
@@ -104,43 +109,43 @@ export function EntryEditor({
                 />
                 <datalist id="food-categories">
                   {foodCategories.map((category) => (
-                    <option key={category} value={category} />
+                    <NativeSelectOption key={category} value={category} />
                   ))}
                 </datalist>
-              </label>
-              <label>
+              </Label>
+              <Label>
                 Place / restaurant name
-                <input
+                <Input
                   name="place_name"
                   defaultValue={entry?.place_name || ""}
                   maxLength={160}
                   required
                   placeholder="Where should we try it?"
                 />
-              </label>
-              <label>
+              </Label>
+              <Label>
                 Location / address
-                <input
+                <Input
                   name="location"
                   defaultValue={entry?.location || ""}
                   maxLength={500}
                   required
                   placeholder="Address, town, or area"
                 />
-              </label>
+              </Label>
             </>
           )}
-          <label>
+          <Label>
             {kind === "Places"
               ? "Address or a little detail"
               : "A little more (optional)"}
-            <textarea
+            <Textarea
               name="detail"
               defaultValue={entry?.detail}
               maxLength={4000}
               rows={4}
             />
-          </label>
+          </Label>
           {![
             "ShortNotes",
             "Groceries",
@@ -148,9 +153,9 @@ export function EntryEditor({
             "Places",
             "FoodToTry",
           ].includes(kind) && (
-            <label>
+            <Label>
               {kind === "Ambitions" ? "Finish by" : "Date"}
-              <input
+              <Input
                 name="due_date"
                 type="date"
                 required={kind === "Countdowns" || kind === "Ambitions"}
@@ -161,12 +166,12 @@ export function EntryEditor({
                     : "")
                 }
               />
-            </label>
+            </Label>
           )}
           {kind === "Ambitions" && (
-            <label>
+            <Label>
               Progress (%)
-              <input
+              <Input
                 name="progress"
                 type="number"
                 min={0}
@@ -174,13 +179,13 @@ export function EntryEditor({
                 defaultValue={entry?.progress || 0}
                 required
               />
-            </label>
+            </Label>
           )}
           <Button disabled={busy}>
             {busy ? "Saving…" : "Save to our space ♡"}
           </Button>
         </form>
-      </dialog>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

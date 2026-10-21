@@ -1,4 +1,36 @@
 @import "tailwindcss";
+@theme inline {
+  --color-primary: var(--accent);
+  --color-primary-foreground: #fff;
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--paper);
+  --color-card-foreground: var(--ink);
+  --color-accent: var(--soft);
+  --color-accent-foreground: var(--ink);
+  --color-secondary: var(--soft);
+  --color-secondary-foreground: var(--ink);
+  --color-muted-foreground: var(--muted);
+  --color-input: var(--line);
+  --color-border: var(--line);
+  --color-ring: var(--accent);
+  --color-destructive: #b42338;
+}
+[data-slot="button"][data-size="default"] {
+  height: 44px;
+  padding-inline: 20px;
+  border-radius: 12px;
+}
+[data-slot="card"].card {
+  display: block;
+}
+[data-slot="label"] {
+  align-items: stretch;
+  line-height: normal;
+}
+[data-slot="input"] {
+  height: auto;
+}
 .food-filter {
   margin: 0 0 14px;
   max-width: 240px;
@@ -221,13 +253,13 @@ p {
 .app-shell {
   min-height: 100vh;
 }
-.app-shell[data-theme="sage"] {
+[data-theme="sage"] {
   --accent: #678475;
   --soft: #edf3ee;
   --line: #dce6df;
   --hero: #e3ece2;
 }
-.app-shell[data-theme="lavender"] {
+[data-theme="lavender"] {
   --accent: #8b74a7;
   --soft: #f1edf7;
   --line: #e3ddec;
@@ -825,35 +857,24 @@ input::placeholder {
   margin-top: 27px;
   padding-top: 25px;
 }
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: #44303c66;
-  display: grid;
-  place-items: center;
-  z-index: 30;
-  padding: 20px;
-  backdrop-filter: blur(3px);
-}
-dialog {
-  position: relative;
-  margin: auto;
+.entry-dialog {
+  display: block;
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 28px;
   background: var(--paper);
   color: var(--ink);
-  width: min(520px, 100%);
-  max-height: 90vh;
+  width: min(520px, calc(100% - 40px));
+  max-height: 90dvh;
   overflow: auto;
 }
-dialog .section-heading h2 {
+.entry-dialog .section-heading h2 {
   font-size: 23px;
 }
-dialog form {
+.entry-dialog form {
   margin-bottom: 0;
 }
-dialog::backdrop {
+[data-slot="dialog-overlay"] {
   background: #44303c66;
   backdrop-filter: blur(3px);
 }

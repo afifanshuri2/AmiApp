@@ -1,4 +1,6 @@
 "use client";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Logo } from "./logo";
@@ -61,9 +63,9 @@ export function Auth() {
         )}
         {(!register || role) && (
           <form onSubmit={submit}>
-            <label>
+            <Label>
               Username
-              <input
+              <Input
                 name="username"
                 autoComplete="username"
                 required
@@ -72,10 +74,10 @@ export function Auth() {
                 maxLength={24}
                 placeholder="Username"
               />
-            </label>
-            <label>
+            </Label>
+            <Label>
               Password
-              <input
+              <Input
                 name="password"
                 type="password"
                 autoComplete={register ? "new-password" : "current-password"}
@@ -84,7 +86,7 @@ export function Auth() {
                 required
                 placeholder="At least 12 characters"
               />
-            </label>
+            </Label>
             <Button disabled={busy || !supabase}>
               {busy ? "One moment…" : register ? "Create account" : "Sign in"}
               <ArrowRight size={16} />

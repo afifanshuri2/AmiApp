@@ -1,4 +1,7 @@
 "use client";
+import { Card } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { Profile } from "../lib/types";
@@ -47,7 +50,7 @@ export function Pair({
       <p className="muted">
         Share a key or enter theirs. Your story opens when you’re both here.
       </p>
-      <section className="card pair-card">
+      <Card className="card pair-card">
         <h2>A little key to us</h2>
         <p>Generate a private invitation for your person.</p>
         <Button disabled={busy} onClick={() => pair(true)}>
@@ -63,9 +66,9 @@ export function Pair({
           </>
         )}
         <div className="divider">or join your person</div>
-        <label>
+        <Label>
           6-digit invitation
-          <input
+          <Input
             aria-label="6-digit invitation"
             inputMode="numeric"
             pattern="[0-9]{6}"
@@ -74,7 +77,7 @@ export function Pair({
             onChange={(e) => setKey(e.target.value.replace(/\D/g, ""))}
             placeholder="000000"
           />
-        </label>
+        </Label>
         <Button disabled={busy || key.length !== 6} onClick={() => pair(false)}>
           Bring us together ♡
         </Button>
@@ -83,7 +86,7 @@ export function Pair({
             {message}
           </p>
         )}
-      </section>
+      </Card>
       <Button variant="ghost" onClick={signOut}>
         Log out
       </Button>
