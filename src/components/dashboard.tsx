@@ -354,7 +354,15 @@ export function Dashboard({
         <a className="wordmark" href="#" onClick={() => setView("Dashboard")}>
           <Logo />
         </a>
-        <p className="sidebar-caption">A LITTLE SPACE FOR US</p>
+        <div className="couple-badge">
+          <span aria-hidden="true">♡</span>
+          <div>
+            <strong>
+              {profile.username} & {partner.username}
+            </strong>
+            <small>Better, together.</small>
+          </div>
+        </div>
         <nav aria-label="Main navigation">
           <button
             className={view === "Dashboard" ? "active" : ""}
@@ -385,6 +393,8 @@ export function Dashboard({
               </button>
             );
           })}
+        </nav>
+        <div className="sidebar-bottom">
           <button
             className={view === "Settings" ? "active" : ""}
             onClick={() => setView("Settings")}
@@ -392,21 +402,6 @@ export function Dashboard({
             <Settings size={18} />
             Settings
           </button>
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="couple-badge">
-            <span>♡</span>
-            <div>
-              <strong>
-                {profile.username} & {partner.username}
-              </strong>
-              <small>Better, together.</small>
-            </div>
-          </div>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut size={16} />
-            Log out
-          </Button>
         </div>
       </aside>
       <div className="main-shell">
@@ -495,6 +490,12 @@ export function Dashboard({
                     onSaved={onRelationshipSaved}
                   />
                   <NotificationSettings userId={profile.id} />
+                  <div>
+                    <Button variant="outline" onClick={signOut}>
+                      <LogOut size={16} />
+                      Log out
+                    </Button>
+                  </div>
                 </div>
               ) : view === "Dashboard" ? (
                 <>
