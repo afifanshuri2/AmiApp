@@ -2,6 +2,10 @@
 
 A shared little space for husbands and wives. Responsive Next.js / React frontend, shadcn-style Radix Button, Tailwind CSS, Motion animations, and Supabase Auth + PostgreSQL. Blush, sage, and lavender themes.
 
+Live app: https://amiapp-afifanshuri2.netlify.app/
+
+Netlify project ID: `2e67f967-582f-4246-b01b-346f5e496cc4`. Deployed manually from the static export; continuous Git deployment is not configured. The sign-in page contains only the logo and form.
+
 ## Where things run
 
 Netlify hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, and the database pairing RPCs. No Edge Function is needed: Supabase Auth handles credentials and PostgreSQL enforces all access. No SQLite remains.
