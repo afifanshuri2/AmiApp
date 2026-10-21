@@ -4,7 +4,7 @@ A shared little space for husbands and wives. Responsive Next.js / React fronten
 
 ## Where things run
 
-GitHub Pages hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, and the database pairing RPCs. **There is no Next.js server on GitHub Pages.** No Edge Function is needed: Supabase Auth handles credentials and PostgreSQL enforces all access. No SQLite remains.
+Netlify hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, and the database pairing RPCs. No Edge Function is needed: Supabase Auth handles credentials and PostgreSQL enforces all access. No SQLite remains.
 
 ## Connect your other Supabase account
 
@@ -37,16 +37,16 @@ RLS protects every table. Only own and paired-partner profiles are readable. Sha
 
 Only the theme and Supabase's session tokens are browser-persisted. Couple entries are not cached in localStorage. Treat the device as private and log out on shared devices. There are no uploads, third-party trackers, user HTML rendering, or service-role credentials. Markdown/HTML in notes is rendered as plain text.
 
-## Publish on GitHub Pages
+## Publish on Netlify
 
-The included `.github/workflows/pages.yml` builds and deploys on pushes to `main`.
+`netlify.toml` configures Node 24, `npm run build`, and the `out` publish directory. The site runs at the domain root; no GitHub Pages base path is used.
 
-1. Create an `AmiApp` repository in your GitHub account, then push this folder to its `main` branch. The repository should contain source only; `.env.local`, `node_modules`, and `out` are ignored.
-2. Repository **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Under **Settings → Secrets and variables → Actions → Variables**, create `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` using the values from your own project.
-4. Push to `main` or run **Publish AmiApp** manually. Expected project URL: `https://YOUR_USERNAME.github.io/AmiApp/`.
+1. In Netlify, import the source repository for continuous deployment, or manually deploy the contents of `out/` after running `npm run build`.
+2. For Git imports, the build and publish settings are read from `netlify.toml` automatically. The default public Supabase settings already point to the configured AmiApp project; optionally override `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Netlify environment settings.
+3. For manual deploys, upload the generated deploy ZIP containing `index.html` and `_next/` at the ZIP root. Manual deployments do not run the build for you.
+4. Add the final Netlify HTTPS URL to Supabase's Auth Site URL setting. Username/password auth does not use email redirects, but the configured URL should still match the deployed app.
 
-The workflow sets `/AmiApp` as the base path automatically from the repository name. For a root `USERNAME.github.io` repository or custom domain, change `NEXT_PUBLIC_BASE_PATH` in the workflow to an empty string. Public config changes require a rebuild. Don't commit personal/couple data to GitHub.
+Public config changes require a rebuild. Never add a service-role key to Netlify's frontend environment. The empty `afifanshuri2/AmiApp` GitHub repository was created before the hosting choice changed; no source has been pushed there and GitHub Pages has not been enabled.
 
 ## Validation
 

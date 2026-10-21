@@ -50,6 +50,7 @@ export function Auth() {
               <Button
                 key={r}
                 variant={role === r ? "default" : "outline"}
+                aria-pressed={role === r}
                 onClick={() => setRole(r)}
               >
                 I’m the {r} {r === "husband" ? "☀" : "❀"}
