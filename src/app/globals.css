@@ -1,4 +1,102 @@
 @import "tailwindcss";
+.food-filter {
+  margin: 0 0 14px;
+  max-width: 240px;
+}
+select {
+  font: inherit;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fffdfa;
+  color: var(--ink);
+}
+.food-meta {
+  margin-top: 7px;
+}
+.food-category {
+  display: inline-block;
+  font-size: 9px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 2px 8px;
+  color: var(--accent);
+}
+.food-place {
+  font-size: 11px;
+  margin-top: 7px;
+  font-weight: 600;
+}
+.food-location {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.food-location svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.relationship-form {
+  text-align: left;
+  max-width: 520px;
+}
+.notification-settings {
+  margin-top: 20px;
+  max-width: 520px;
+}
+.notification-settings .muted {
+  font-size: 12px;
+  margin: 12px 0;
+}
+.notification-settings [role="status"] {
+  font-size: 12px;
+  margin-top: 12px;
+  color: var(--accent);
+}
+.unread-badge {
+  margin-left: auto;
+  min-width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+}
+.relationship-form > .muted {
+  font-size: 12px;
+  margin-top: 12px;
+}
+.together-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 22px 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+}
+.together-card > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.together-card .eyebrow {
+  margin-bottom: 6px;
+}
+.together-card h2 {
+  font-size: 24px;
+}
+.together-card .muted {
+  font-size: 11px;
+  margin-top: 7px;
+}
 :root {
   --accent: #b96379;
   --soft: #faedf0;

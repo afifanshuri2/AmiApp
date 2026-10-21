@@ -8,14 +8,14 @@ Netlify project ID: `2e67f967-582f-4246-b01b-346f5e496cc4`. Deployed manually fr
 
 ## Where things run
 
-Netlify hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, and the database pairing RPCs. No Edge Function is needed: Supabase Auth handles credentials and PostgreSQL enforces all access. No SQLite remains.
+Netlify hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, pairing/settings RPCs, and the `shortnote-push` Edge Function. Supabase Auth handles credentials and PostgreSQL enforces access. No SQLite remains.
 
 ## Connect your other Supabase account
 
-Configured project: **Secondary → apopia company → AmiApp**, reference `cxvovxdmhgoyrnfxzkpi`. Both migrations have been applied. The primary Supabase account was not modified. Public client settings are included in `src/lib/supabase.ts`; `.env.local` can override them.
+Configured project: **Secondary → apopia company → AmiApp**, reference `cxvovxdmhgoyrnfxzkpi`. Schema migrations have been applied. The primary Supabase account was not modified. Public client settings are included in `src/lib/supabase.ts`; `.env.local` can override them.
 
 1. Sign into your preferred account at https://supabase.com/dashboard and create a **dedicated new project** for AmiApp.
-2. For a fresh project, run both SQL files in `supabase/migrations/` in filename order once. Do not rerun them on the configured AmiApp project. Keep `private` out of the Data API exposed schemas; expose only `public` for this app. Alternatively, use the Supabase CLI with a separate profile after checking `npx supabase login --help`, `link --help`, and `db push --help`. Confirm the project reference before applying anything.
+2. For a fresh project, run all SQL files in `supabase/migrations/` in filename order once. Do not rerun them on the configured AmiApp project. Keep `private`, `vault`, and `net` out of the Data API exposed schemas; expose only `public` for this app. The push webhook URL in the migration and the production CORS/VAPID URL in the Edge Function must be changed for a different project/site. Deploy `supabase/functions/shortnote-push/index.ts` with its handler authentication (`verify_jwt=false` in `supabase/config.toml`). Confirm the project reference before applying anything.
 3. Enable Email/Password auth. **Disable Confirm Email**: usernames map to internal `username@users.amiapp.invalid` identities; the app never asks for or sends email. Disable anonymous sign-ins and unused providers. In Password Security set minimum password length to **12** and configure password strength / leaked password protection if available on your plan. Frontend limits are not a substitute for server auth settings.
 4. Set your production site URL in Auth URL Configuration. Review Auth rate limits. For a public signup launch, enable Supabase-supported CAPTCHA and add its token flow to the form before opening unrestricted registration; pairing has a per-account database limit but automated account creation still needs abuse protection at signup.
 5. Copy `.env.example` to `.env.local`, then add your **project URL and publishable key**. These two values are intentionally public. Never add a service-role key, secret key, database password, or personal access token.
@@ -32,6 +32,24 @@ The default public configuration connects to the configured AmiApp project. It n
 - Create, edit, complete, and delete shared items. Countdown cards are omitted from the dashboard when none exist; use Counting down in the navigation to create one.
 - Shared data refreshes every 20 seconds while the tab is visible, with cleanup on unmount. The dashboard has manual refresh too. Mutations refresh immediately.
 - Reminders are an in-app dated list, not push notifications or background alarms.
+
+## Relationship date, food, and iOS installation
+
+After pairing, onboarding asks for an optional **Together since** date. Skip creates an empty settings row so it does not ask again. A late skip cannot overwrite a partner's already saved date. Either spouse can edit/remove it in **Settings**. The dashboard shows calendar years, months, and days only when a date is set; it refreshes at midnight without elapsed-millisecond/DST drift.
+
+**Food to try** supports a dish, cuisine category, restaurant/place name, location/address, optional notes, and a tried checkbox. Category suggestions include Western, Malay, Kampung, Chinese, Indian, Japanese, Korean, Thai, Indonesian, Middle Eastern, Seafood, and Desserts. Custom categories are accepted; the list can be filtered by category. These records use the same couple RLS as other entries.
+
+The app includes a standalone web manifest, 192/512 px maskable icons, and an opaque 180 px Apple touch icon. In Safari, use Share → Add to Home Screen. Re-add an old shortcut if iOS still shows a cached older icon. Actual home-screen installation must be verified on an iPhone; desktop checks validate the generated assets and metadata.
+
+## Partner ShortNote notifications
+
+Open **Settings → Enable notifications** from the installed app. iOS requires an installed Home Screen web app, iOS 16.4+, and permission granted after tapping the enable button. Enabling/disabling applies to the current device. Signing out unsubscribes that device and clears its badge. This does not enable push alarms for ordinary to-dos.
+
+Every new ShortNote creates a partner-only unread record. A database trigger queues an authenticated pg_net webhook after commit; the Edge Function sends encrypted Web Push using VAPID. It always displays a generic alert, never note contents. The icon badge reflects unread ShortNotes and clears when those notes are opened. A notification tap opens ShortNotes. The service worker does not cache app pages or private data. Expired subscriptions are removed after 404/410 push responses. Delivery remains subject to OS notification settings, connectivity, and push-provider availability.
+
+The Edge Function checks Supabase user tokens for public-key requests and a private, fixed-length webhook token for dispatch. Only paired users can subscribe. Endpoints are limited to Apple, Google FCM, and Mozilla push services to avoid arbitrary outbound URLs. Subscriptions are visible only to their owner. VAPID private keys and the webhook token are initialized on the server and stored in Supabase Vault; they never reach the browser or repository. Only a service-role-only RPC can retrieve them. No Apple Developer membership is required for standards-based Web Push.
+
+Live checks cover the authenticated database webhook (HTTP 200), recipient-only unread records, key initialization/access restrictions, and the user API. Service-worker tests check visible private alerts, badge updates, and same-origin navigation. Actual closed-app iOS delivery requires a physical device test after permission is enabled. Supabase currently flags disabled leaked-password protection; review Auth password-security settings if your plan supports that feature.
 
 ## Passwords and privacy
 

@@ -10,14 +10,25 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
   };
   const db = new PGlite();
   try {
-    await db.exec(`create role anon; create role authenticated; create schema auth;
+    await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth;
    create table auth.users(id uuid primary key, email text unique, raw_user_meta_data jsonb);
    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-   grant usage on schema auth to authenticated, anon; grant execute on function auth.uid() to authenticated, anon;`);
+   create function auth.jwt() returns jsonb language sql stable as $$ select jsonb_build_object('role',current_setting('request.jwt.claim.role',true)) $$;
+   grant usage on schema auth to authenticated, anon,service_role; grant execute on function auth.uid(),auth.jwt() to authenticated, anon,service_role;
+   create schema net; create table net.http_request_queue(id bigint);
+   create function net.http_post(url text,body jsonb default '{}',params jsonb default '{}',headers jsonb default '{}',timeout_milliseconds integer default 2000) returns bigint language sql as $$ select 1::bigint $$;
+   create schema vault;create table vault.decrypted_secrets(id uuid primary key,decrypted_secret text);
+   create function vault.create_secret(secret text,name text) returns uuid language sql as $$ insert into vault.decrypted_secrets values(gen_random_uuid(),secret) returning id $$;`);
     for (const file of readdirSync("supabase/migrations")
       .filter((f) => f.endsWith(".sql"))
       .sort())
-      await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
+      // Infrastructure only is stubbed: PGlite has no pg_net worker or encrypted Vault.
+      await db.exec(
+        readFileSync(`supabase/migrations/${file}`, "utf8").replace(
+          "create extension if not exists pg_net;",
+          "",
+        ),
+      );
     const ids = Array.from(
       { length: 7 },
       (_, i) => `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`,
@@ -37,6 +48,9 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
         index === null ? "" : ids[index],
       ]);
       await db.exec(`set role ${index === null ? "anon" : "authenticated"}`);
+      await db.query("select set_config('request.jwt.claim.role',$1,false)", [
+        index === null ? "anon" : "authenticated",
+      ]);
       return db.query(sql, params);
     }
     const code = async (i) =>
@@ -231,6 +245,200 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
       assert.equal(rows.length, 1);
       assert.equal(rows[0].matches, old === replacement);
     });
+    await check(
+      "relationship date is optional, shared, editable, removable, and isolated",
+      async () => {
+        assert.equal(
+          (await as(0, "select * from public.couple_settings")).rows.length,
+          0,
+        );
+        await as(0, "select public.save_relationship_date(null)");
+        assert.equal(
+          (await as(1, "select together_since from public.couple_settings"))
+            .rows[0].together_since,
+          null,
+        );
+        await as(1, "select public.save_relationship_date('2020-01-01')");
+        assert.equal(
+          (
+            await as(
+              0,
+              "select together_since::text as date from public.couple_settings",
+            )
+          ).rows[0].date,
+          "2020-01-01",
+        );
+        assert.equal(
+          (await as(2, "select * from public.couple_settings")).rows.length,
+          0,
+        );
+        await assert.rejects(
+          as(2, "insert into public.couple_settings values($1,null)", [
+            coupleA,
+          ]),
+        );
+        await assert.rejects(
+          as(0, "select public.save_relationship_date('2099-01-01')"),
+        );
+        await as(0, "select public.save_relationship_date(null)");
+        await assert.rejects(
+          as(null, "select public.save_relationship_date(null)"),
+        );
+        await assert.rejects(
+          as(6, "select public.save_relationship_date(null)"),
+        );
+      },
+    );
+    await check(
+      "push credentials are inaccessible to users, including authenticated users",
+      async () => {
+        await assert.rejects(as(0, "select public.push_credentials()"));
+        await assert.rejects(as(null, "select public.push_credentials()"));
+        await assert.rejects(as(0, "select * from private.push_config"));
+        await db.exec("reset role");
+        await db.query(
+          "select set_config('request.jwt.claim.role','service_role',false)",
+        );
+        await db.exec("set role service_role");
+        const result = await db.query(
+          "select public.push_credentials('test-public','test-private') as config",
+        );
+        assert.equal(result.rows[0].config.publicKey, "test-public");
+        assert.equal(result.rows[0].config.privateKey, "test-private");
+      },
+    );
+    await check(
+      "new ShortNotes notify only the partner and protect unread state and endpoints",
+      async () => {
+        await as(
+          1,
+          "insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values($1,$2,$3,$4)",
+          [
+            ids[1],
+            "https://web.push.apple.com/test",
+            "a".repeat(87),
+            "b".repeat(22),
+          ],
+        );
+        await assert.rejects(
+          as(
+            0,
+            "insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values($1,$2,$3,$4)",
+            [
+              ids[0],
+              "https://127.0.0.1/internal",
+              "a".repeat(87),
+              "b".repeat(22),
+            ],
+          ),
+        );
+        const note = (
+          await as(
+            0,
+            "insert into public.entries(couple_id,kind,title,created_by) values($1,'ShortNotes','A private note',$2) returning id",
+            [coupleA, ids[0]],
+          )
+        ).rows[0].id;
+        assert.equal(
+          (await as(0, "select * from public.note_notifications")).rows.length,
+          0,
+        );
+        assert.equal(
+          (await as(2, "select * from public.note_notifications")).rows.length,
+          0,
+        );
+        assert.equal(
+          (await as(2, "select * from public.push_subscriptions")).rows.length,
+          0,
+        );
+        const notifications = (
+          await as(1, "select * from public.note_notifications")
+        ).rows;
+        assert.equal(notifications.length, 1);
+        assert.equal(notifications[0].entry_id, note);
+        assert.equal(
+          (
+            await as(
+              0,
+              "update public.note_notifications set read_at=now() returning id",
+            )
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await as(
+              1,
+              "update public.note_notifications set read_at=now() returning id",
+            )
+          ).rows.length,
+          1,
+        );
+        await assert.rejects(
+          as(1, "update public.note_notifications set dispatched_at=now()"),
+        );
+        await as(0, "delete from public.entries where id=$1", [note]);
+        assert.equal(
+          (await as(1, "select * from public.note_notifications")).rows.length,
+          0,
+        );
+      },
+    );
+    await check(
+      "food categories and locations are shared only inside the couple",
+      async () => {
+        const food = (
+          await as(
+            0,
+            "insert into public.entries(couple_id,kind,title,created_by,category,place_name,location) values($1,'FoodToTry','Nasi kerabu',$2,'Kampung','Warung QA','Kuala Lumpur') returning id",
+            [coupleA, ids[0]],
+          )
+        ).rows[0].id;
+        assert.equal(
+          (
+            await as(
+              1,
+              "select category,location from public.entries where id=$1",
+              [food],
+            )
+          ).rows[0].category,
+          "Kampung",
+        );
+        assert.equal(
+          (await as(2, "select * from public.entries where id=$1", [food])).rows
+            .length,
+          0,
+        );
+        await as(
+          1,
+          "update public.entries set category='Malay',done=true where id=$1",
+          [food],
+        );
+        assert.equal(
+          (await as(0, "select done from public.entries where id=$1", [food]))
+            .rows[0].done,
+          true,
+        );
+        await assert.rejects(
+          as(
+            0,
+            "insert into public.entries(couple_id,kind,title,created_by) values($1,'FoodToTry','Missing place',$2)",
+            [coupleA, ids[0]],
+          ),
+        );
+        await as(0, "select public.save_relationship_date('2020-01-01')");
+        await as(1, "select public.save_relationship_date(null,true)");
+        assert.equal(
+          (
+            await as(
+              0,
+              "select together_since::text as date from public.couple_settings",
+            )
+          ).rows[0].date,
+          "2020-01-01",
+        );
+      },
+    );
   } finally {
     await db.close();
   }

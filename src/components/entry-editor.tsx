@@ -2,10 +2,16 @@
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
-import type { Entry, Kind } from "../lib/types";
+import { foodCategories, type Entry, type Kind } from "../lib/types";
 export type EntryInput = Pick<
   Entry,
-  "title" | "detail" | "due_date" | "progress"
+  | "title"
+  | "detail"
+  | "due_date"
+  | "progress"
+  | "category"
+  | "place_name"
+  | "location"
 >;
 export function EntryEditor({
   kind,
@@ -50,21 +56,28 @@ export function EntryEditor({
             <X size={18} />
           </Button>
         </div>
-        <p className="eyebrow">{kind}</p>
+        <p className="eyebrow">{kind === "FoodToTry" ? "Food to try" : kind}</p>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
+            const category = String(form.get("category") || "").trim();
             await save({
               title: String(form.get("title")).trim(),
               detail: String(form.get("detail") || "").trim(),
               due_date: String(form.get("due_date") || "") || null,
               progress: Number(form.get("progress") || 0),
+              category:
+                foodCategories.find(
+                  (c) => c.toLowerCase() === category.toLowerCase(),
+                ) || category,
+              place_name: String(form.get("place_name") || "").trim(),
+              location: String(form.get("location") || "").trim(),
             });
           }}
         >
           <label>
-            Title
+            {kind === "FoodToTry" ? "Food or dish to try" : "Title"}
             <input
               name="title"
               defaultValue={entry?.title}
@@ -77,6 +90,46 @@ export function EntryEditor({
               }
             />
           </label>
+          {kind === "FoodToTry" && (
+            <>
+              <label>
+                Category
+                <input
+                  name="category"
+                  list="food-categories"
+                  maxLength={40}
+                  defaultValue={entry?.category || ""}
+                  placeholder="Choose or type a category"
+                  required
+                />
+                <datalist id="food-categories">
+                  {foodCategories.map((category) => (
+                    <option key={category} value={category} />
+                  ))}
+                </datalist>
+              </label>
+              <label>
+                Place / restaurant name
+                <input
+                  name="place_name"
+                  defaultValue={entry?.place_name || ""}
+                  maxLength={160}
+                  required
+                  placeholder="Where should we try it?"
+                />
+              </label>
+              <label>
+                Location / address
+                <input
+                  name="location"
+                  defaultValue={entry?.location || ""}
+                  maxLength={500}
+                  required
+                  placeholder="Address, town, or area"
+                />
+              </label>
+            </>
+          )}
           <label>
             {kind === "Places"
               ? "Address or a little detail"
@@ -88,7 +141,13 @@ export function EntryEditor({
               rows={4}
             />
           </label>
-          {!["ShortNotes", "Groceries", "Goals", "Places"].includes(kind) && (
+          {![
+            "ShortNotes",
+            "Groceries",
+            "Goals",
+            "Places",
+            "FoodToTry",
+          ].includes(kind) && (
             <label>
               {kind === "Ambitions" ? "Finish by" : "Date"}
               <input

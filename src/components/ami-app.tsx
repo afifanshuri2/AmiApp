@@ -4,8 +4,9 @@ import { supabase } from "../lib/supabase";
 import type { Profile } from "../lib/types";
 import { Auth } from "./auth";
 import { Pair } from "./pair";
-import { Dashboard } from "./dashboard";
+import { CoupleSpace } from "./couple-space";
 import { Button } from "./ui/button";
+import { signOut } from "../lib/notifications";
 export function AmiApp() {
   const [profile, setProfile] = useState<Profile | null>(null),
     [partner, setPartner] = useState<Profile | null>(null),
@@ -70,7 +71,7 @@ export function AmiApp() {
           {error}
         </p>
         <Button onClick={refresh}>Try again</Button>
-        <Button variant="ghost" onClick={() => supabase?.auth.signOut()}>
+        <Button variant="ghost" onClick={signOut}>
           Log out
         </Button>
       </main>
@@ -78,5 +79,5 @@ export function AmiApp() {
   if (!profile) return <Auth />;
   if (!profile.couple_id || !partner)
     return <Pair profile={profile} refresh={refresh} />;
-  return <Dashboard profile={profile} partner={partner} />;
+  return <CoupleSpace profile={profile} partner={partner} />;
 }

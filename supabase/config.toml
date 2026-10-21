@@ -1,0 +1,4 @@
+project_id = "amiapp"
+[functions.shortnote-push]
+# The handler authenticates user JWTs and the private database webhook separately.
+verify_jwt = false

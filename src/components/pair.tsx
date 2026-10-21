@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import type { Profile } from "../lib/types";
 import { Button } from "./ui/button";
+import { signOut } from "../lib/notifications";
 export function Pair({
   profile,
   refresh,
@@ -83,7 +84,7 @@ export function Pair({
           </p>
         )}
       </section>
-      <Button variant="ghost" onClick={() => supabase?.auth.signOut()}>
+      <Button variant="ghost" onClick={signOut}>
         Log out
       </Button>
     </main>

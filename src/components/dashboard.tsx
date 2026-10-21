@@ -17,12 +17,25 @@ import {
   Check,
   ArrowUpRight,
   RefreshCw,
+  Settings,
+  UtensilsCrossed,
 } from "lucide-react";
-import { kinds, type Entry, type Kind, type Profile } from "../lib/types";
+import {
+  kinds,
+  foodCategories,
+  type Entry,
+  type Kind,
+  type Profile,
+} from "../lib/types";
 import { supabase } from "../lib/supabase";
 import { Button } from "./ui/button";
 import { EntryEditor, type EntryInput } from "./entry-editor";
 import { Logo } from "./logo";
+import { TogetherCard } from "./together-card";
+import { RelationshipForm } from "./relationship-form";
+import { NotificationSettings } from "./notification-settings";
+import { useNoteBadge } from "../lib/use-note-badge";
+import { signOut } from "../lib/notifications";
 const icons = [
   NotebookPen,
   Flag,
@@ -30,6 +43,7 @@ const icons = [
   CheckSquare,
   ShoppingBasket,
   MapPin,
+  UtensilsCrossed,
   Hourglass,
 ];
 const labels: Record<Kind, string> = {
@@ -39,6 +53,7 @@ const labels: Record<Kind, string> = {
   Todos: "To-dos & reminders",
   Groceries: "Grocery list",
   Places: "Places to go",
+  FoodToTry: "Food to try",
   Countdowns: "Counting down",
 };
 const hints: Record<Kind, string> = {
@@ -48,23 +63,40 @@ const hints: Record<Kind, string> = {
   Todos: "Less remembering. More living.",
   Groceries: "For our next little grocery run.",
   Places: "Our next “let’s go there”.",
+  FoodToTry: "New flavors, little food adventures, together.",
   Countdowns: "Good things are on their way.",
 };
 export function Dashboard({
   profile,
   partner,
+  togetherSince,
+  onRelationshipSaved,
 }: {
   profile: Profile;
   partner: Profile;
+  togetherSince: string | null;
+  onRelationshipSaved: (date: string | null) => Promise<void>;
 }) {
   const [entries, setEntries] = useState<Entry[]>([]),
-    [view, setView] = useState<Kind | "Dashboard">("Dashboard"),
+    [view, setView] = useState<Kind | "Dashboard" | "Settings">("Dashboard"),
     [theme, setTheme] = useState("rose"),
     [editor, setEditor] = useState<{ kind: Kind; entry?: Entry } | null>(null),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
+  const [foodCategory, setFoodCategory] = useState("");
   const reduced = useReducedMotion();
+  const unread = useNoteBadge(
+    profile.id,
+    entries.filter((e) => e.kind === "ShortNotes").map((e) => e.id),
+    view === "ShortNotes" && !loading,
+  );
+  useEffect(() => {
+    if (
+      new URLSearchParams(window.location.search).get("view") === "ShortNotes"
+    )
+      setView("ShortNotes");
+  }, []);
   useEffect(() => {
     const saved = localStorage.getItem("ami-theme");
     if (saved && ["rose", "sage", "lavender"].includes(saved)) setTheme(saved);
@@ -144,7 +176,14 @@ export function Dashboard({
   }
   const completed = entries.filter((e) => e.done).length;
   function section(kind: Kind, compact = false) {
-    const list = entries.filter((e) => e.kind === kind);
+    const list = entries.filter(
+      (e) =>
+        e.kind === kind &&
+        (kind !== "FoodToTry" ||
+          compact ||
+          !foodCategory ||
+          e.category === foodCategory),
+    );
     const Icon = icons[kinds.indexOf(kind)];
     return (
       <section
@@ -159,13 +198,36 @@ export function Dashboard({
           <Button
             variant="ghost"
             size="icon"
-            aria-label={`Add ${kind}`}
+            aria-label={`Add ${labels[kind]}`}
             onClick={() => setEditor({ kind })}
           >
             <Plus size={19} />
           </Button>
         </div>
         <p className="muted section-hint">{hints[kind]}</p>
+        {kind === "FoodToTry" && !compact && (
+          <label className="food-filter">
+            Filter by category
+            <select
+              value={foodCategory}
+              onChange={(e) => setFoodCategory(e.target.value)}
+            >
+              <option value="">All categories</option>
+              {Array.from(
+                new Set([
+                  ...foodCategories,
+                  ...entries
+                    .filter((e) => e.kind === "FoodToTry")
+                    .map((e) => e.category),
+                ]),
+              )
+                .sort()
+                .map((category) => (
+                  <option key={category}>{category}</option>
+                ))}
+            </select>
+          </label>
+        )}
         {list.length ? (
           <div className="entry-list">
             {(compact ? list.slice(0, 3) : list).map((e) => (
@@ -196,6 +258,17 @@ export function Dashboard({
                   )}
                   <div className="entry-copy">
                     <h3>{e.title}</h3>
+                    {kind === "FoodToTry" && (
+                      <div className="food-meta">
+                        <span className="food-category">{e.category}</span>
+                        <p className="food-place">{e.place_name}</p>
+                        <p className="food-location">
+                          <MapPin size={13} aria-hidden="true" />
+                          {e.location}
+                        </p>
+                        {e.done && <small>Tried together ♡</small>}
+                      </div>
+                    )}
                     {e.detail && <p className="entry-detail">{e.detail}</p>}
                     {e.due_date && (
                       <p className="entry-date">
@@ -301,9 +374,24 @@ export function Dashboard({
               >
                 <Icon size={18} />
                 {labels[kind]}
+                {kind === "ShortNotes" && unread > 0 && (
+                  <span
+                    className="unread-badge"
+                    aria-label={`${unread} unread notes`}
+                  >
+                    {unread}
+                  </span>
+                )}
               </button>
             );
           })}
+          <button
+            className={view === "Settings" ? "active" : ""}
+            onClick={() => setView("Settings")}
+          >
+            <Settings size={18} />
+            Settings
+          </button>
         </nav>
         <div className="sidebar-bottom">
           <div className="couple-badge">
@@ -315,7 +403,7 @@ export function Dashboard({
               <small>Better, together.</small>
             </div>
           </div>
-          <Button variant="ghost" onClick={() => supabase?.auth.signOut()}>
+          <Button variant="ghost" onClick={signOut}>
             <LogOut size={16} />
             Log out
           </Button>
@@ -326,7 +414,10 @@ export function Dashboard({
           <span>
             Our little corner{" "}
             <span className="muted">
-              / {view === "Dashboard" ? "Dashboard" : labels[view]}
+              /{" "}
+              {view === "Dashboard" || view === "Settings"
+                ? view
+                : labels[view]}
             </span>
           </span>
           <div className="theme-picker" aria-label="Color theme">
@@ -359,22 +450,30 @@ export function Dashboard({
               <h1>
                 {view === "Dashboard"
                   ? "Home is wherever we are."
-                  : labels[view]}
+                  : view === "Settings"
+                    ? "Our settings"
+                    : labels[view]}
               </h1>
               <p className="muted">
                 {view === "Dashboard"
                   ? `Hey ${profile.username}, let’s make a little room for us today. ♡`
-                  : hints[view]}
+                  : view === "Settings"
+                    ? "The little details that make this space ours."
+                    : hints[view]}
               </p>
             </div>
-            <Button
-              onClick={() =>
-                setEditor({ kind: view === "Dashboard" ? "ShortNotes" : view })
-              }
-            >
-              <Plus size={17} />
-              Add a little thing
-            </Button>
+            {view !== "Settings" && (
+              <Button
+                onClick={() =>
+                  setEditor({
+                    kind: view === "Dashboard" ? "ShortNotes" : view,
+                  })
+                }
+              >
+                <Plus size={17} />
+                Add a little thing
+              </Button>
+            )}
           </div>
           {error && (
             <p className="error" role="alert">
@@ -389,7 +488,15 @@ export function Dashboard({
               exit={reduced ? {} : { opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              {view === "Dashboard" ? (
+              {view === "Settings" ? (
+                <div className="single-collection">
+                  <RelationshipForm
+                    initialDate={togetherSince}
+                    onSaved={onRelationshipSaved}
+                  />
+                  <NotificationSettings userId={profile.id} />
+                </div>
+              ) : view === "Dashboard" ? (
                 <>
                   <section className="hero-card">
                     <div>
@@ -420,6 +527,7 @@ export function Dashboard({
                       <span className="art-caption">you + me, always.</span>
                     </div>
                   </section>
+                  {togetherSince && <TogetherCard since={togetherSince} />}
                   <div className="stats">
                     <div>
                       <span>♡</span>

@@ -5,6 +5,7 @@ export const kinds = [
   "Todos",
   "Groceries",
   "Places",
+  "FoodToTry",
   "Countdowns",
 ] as const;
 export type Kind = (typeof kinds)[number];
@@ -14,6 +15,9 @@ export type Entry = {
   kind: Kind;
   title: string;
   detail: string;
+  category: string;
+  place_name: string;
+  location: string;
   done: boolean;
   progress: number;
   due_date: string | null;
@@ -26,3 +30,18 @@ export type Profile = {
   role: "husband" | "wife";
   couple_id: string | null;
 };
+export const foodCategories = [
+  "Western",
+  "Malay",
+  "Kampung",
+  "Chinese",
+  "Indian",
+  "Japanese",
+  "Korean",
+  "Thai",
+  "Indonesian",
+  "Middle Eastern",
+  "Seafood",
+  "Desserts",
+  "Other",
+];
