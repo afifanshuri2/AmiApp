@@ -16,7 +16,16 @@ Configured project: **Secondary → apopia company → AmiApp**, reference `cxvo
 
 ## Pending local feature revision
 
-Not deployed. `supabase/migrations/20261025064718_everyday_feature_updates.sql` is prepared and tested in PGlite, but has not been applied to the hosted database. It adds `entries.due_at`, `entries.emoji`, append-only couple-scoped `goal_updates`, and the transactional `add_goal_update` RPC. New timed reminders, place emoji saves, and goal history require this migration before they can save to Supabase. Apply it only as part of an explicitly approved database release.
+The earlier everyday-feature revision (`20261025064718_everyday_feature_updates.sql`) was released on October 25, 2026. The newer avatar/gesture revision is **local only**. Do not publish or apply it until the user asks for a release.
+
+The local revision removes dashboard statistics, counts unfinished to-dos, previews two non-scrolling ShortNotes and the newest grocery list, and replaces the hero banner with customizable couple avatars. Each person can change their own skin tone, hairstyle, hair color, headwear (including hijab), glasses, and outfit color. Poke, Nudge, and Kiss go only to the paired partner. Incoming gestures remain in their inbox until acknowledged; notifications and app badges include gestures and ShortNotes. No personal content is included in push payloads.
+
+Pending release order:
+1. Apply `supabase/migrations/20261025071846_couple_avatars_and_gestures.sql` to the existing **Secondary / AmiApp** project. It adds own-editable partner-visible avatars, couple-scoped gesture inboxes, a private identity-checking send broker, and a private push trigger. No existing entries are removed. Sends have a database-enforced 10-second cooldown and 60-per-24-hour cap per sender; clients cannot pick another recipient or forge timestamps.
+2. Publish the updated `supabase/functions/shortnote-push/index.ts` with its existing JWT/webhook authentication settings. It supports both notification types and combines unread counts. Existing subscriptions and server-only VAPID keys are reused.
+3. Build and publish `out/` on the existing Netlify project. The updated service worker uses fixed safe gesture text and opens the dashboard for gestures. iOS closed-app delivery still needs a physical Home Screen installation with notification permission.
+
+Until that release, shared avatar saves, sending gestures, and live push delivery for gestures are unavailable against the hosted database. UI flows are checked with an isolated in-memory preview, not writes to real couple data. PGlite tests cover avatar ownership, couple isolation, recipient-only acknowledgement, immutable fields, cooldown/daily limits, and rejected direct inserts; local push tests cover webhook authentication, recipient routing, safe alert text, badge totals, and same-origin navigation.
 
 The combined Goals & ambitions view includes existing `Goals` and `Ambitions` entries without deleting or rewriting them. Reminders live below Together for, food uses cuisine icons, places use pinned emoji notes, and the dashboard countdown always offers four slots. Dedicated countdown pages retain all records. Preview fixtures are kept outside application routes; no sample data is inserted into Supabase.
 

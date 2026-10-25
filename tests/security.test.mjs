@@ -553,6 +553,178 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
         );
       },
     );
+
+    await check(
+      "avatars are personal; partner gestures are scoped, immutable, and rate limited",
+      async () => {
+        await as(
+          0,
+          "insert into public.avatars(user_id,skin,headwear,glasses) values($1,'brown','hijab','round')",
+          [ids[0]],
+        );
+        assert.equal(
+          (
+            await as(1, "select * from public.avatars where user_id=$1", [
+              ids[0],
+            ])
+          ).rows[0].headwear,
+          "hijab",
+        );
+        assert.equal(
+          (
+            await as(2, "select * from public.avatars where user_id=$1", [
+              ids[0],
+            ])
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await as(
+              1,
+              "update public.avatars set glasses='square' where user_id=$1 returning *",
+              [ids[0]],
+            )
+          ).rows.length,
+          0,
+        );
+        await assert.rejects(
+          as(1, "insert into public.avatars(user_id) values($1)", [ids[0]]),
+        );
+        await assert.rejects(
+          as(0, "update public.avatars set user_id=$1 where user_id=$2", [
+            ids[1],
+            ids[0],
+          ]),
+        );
+        await assert.rejects(
+          as(
+            0,
+            "update public.avatars set skin='javascript' where user_id=$1",
+            [ids[0]],
+          ),
+        );
+        await as(
+          0,
+          "insert into public.avatars(user_id,skin,hair,hair_color,headwear,glasses,outfit) values($1,'deep','curls','silver','beanie','square','rose') on conflict(user_id) do update set user_id=excluded.user_id,skin=excluded.skin,hair=excluded.hair,hair_color=excluded.hair_color,headwear=excluded.headwear,glasses=excluded.glasses,outfit=excluded.outfit",
+          [ids[0]],
+        );
+        assert.equal(
+          (
+            await as(1, "select skin from public.avatars where user_id=$1", [
+              ids[0],
+            ])
+          ).rows[0].skin,
+          "deep",
+        );
+        await assert.rejects(as(null, "select * from public.avatars"));
+        await assert.rejects(
+          as(6, "select public.send_partner_gesture('poke')"),
+        );
+        await assert.rejects(
+          as(null, "select public.send_partner_gesture('poke')"),
+        );
+        await assert.rejects(
+          as(0, "select public.send_partner_gesture('forged')"),
+        );
+        const sent = (
+          await as(0, "select public.send_partner_gesture('kiss') as id")
+        ).rows[0].id;
+        const received = (
+          await as(1, "select * from public.partner_gestures where id=$1", [
+            sent,
+          ])
+        ).rows[0];
+        assert.equal(received.sender_id, ids[0]);
+        assert.equal(received.recipient_id, ids[1]);
+        assert.equal(received.couple_id, coupleA);
+        assert.equal(received.read_at, null);
+        assert.equal(
+          (
+            await as(2, "select * from public.partner_gestures where id=$1", [
+              sent,
+            ])
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await as(
+              0,
+              "update public.partner_gestures set read_at=now() where id=$1 returning id",
+              [sent],
+            )
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await as(
+              2,
+              "update public.partner_gestures set read_at=now() where id=$1 returning id",
+              [sent],
+            )
+          ).rows.length,
+          0,
+        );
+        await assert.rejects(
+          as(1, "update public.partner_gestures set sender_id=$1 where id=$2", [
+            ids[2],
+            sent,
+          ]),
+        );
+        await assert.rejects(
+          as(
+            0,
+            "insert into public.partner_gestures(couple_id,sender_id,recipient_id,kind) values($1,$2,$3,'poke')",
+            [coupleA, ids[0], ids[2]],
+          ),
+        );
+        await assert.rejects(
+          as(1, "delete from public.partner_gestures where id=$1", [sent]),
+        );
+        await assert.rejects(
+          as(0, "select public.send_partner_gesture('nudge')"),
+          /A little pause/,
+        );
+        await as(
+          1,
+          "update public.partner_gestures set read_at=now() where id=$1",
+          [sent],
+        );
+        assert.ok(
+          (
+            await as(
+              1,
+              "select read_at from public.partner_gestures where id=$1",
+              [sent],
+            )
+          ).rows[0].read_at,
+        );
+        // Recipient can send back; cooldown is per authenticated sender.
+        await as(1, "select public.send_partner_gesture('nudge')");
+        await as(0, "select 1");
+        await db.exec("reset role");
+        await db.query(
+          "update public.partner_gestures set created_at=now()-interval '1 minute' where id=$1",
+          [sent],
+        );
+        await as(0, "select public.send_partner_gesture('poke')");
+        await db.exec("reset role");
+        await db.query(
+          "update public.partner_gestures set created_at=now()-interval '1 minute' where sender_id=$1",
+          [ids[0]],
+        );
+        await db.query(
+          "insert into public.partner_gestures(couple_id,sender_id,recipient_id,kind,created_at) select $1,$2,$3,'poke',now()-interval '1 hour' from generate_series(1,58)",
+          [coupleA, ids[0], ids[1]],
+        );
+        await assert.rejects(
+          as(0, "select public.send_partner_gesture('kiss')"),
+          /Enough love/,
+        );
+      },
+    );
   } finally {
     await db.close();
   }

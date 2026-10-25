@@ -2017,3 +2017,245 @@ input::placeholder {
   font-size: 20px;
   gap: 8px;
 }
+
+/* Dashboard notes are fixed previews; full notes remain in the notebook. */
+.collections-grid .notebook-notes {
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.notebook-compact .notebook-note {
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+.notebook-compact .notebook-note h3,
+.notebook-compact .notebook-note > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+}
+.notebook-compact .notebook-note h3 {
+  -webkit-line-clamp: 1;
+}
+.collections-grid .notebook-empty {
+  grid-row: 1 / -1;
+}
+
+/* Two small avatars, one shared little world. */
+.couple-playground {
+  background: var(--hero);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 24px 30px;
+  margin-bottom: 22px;
+  text-align: center;
+  --avatar-backdrop: #fffaf2;
+}
+.playground-heading h2 {
+  font-size: 30px;
+  margin: 12px 0 5px;
+}
+.playground-heading > p,
+.gesture-status {
+  font-size: 12px;
+  color: var(--muted);
+}
+.avatar-pair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 12px 0 18px;
+}
+.avatar-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 160px;
+  min-width: 0;
+}
+.couple-avatar {
+  display: block;
+  width: 150px;
+  max-width: 100%;
+  height: auto;
+}
+.avatar-person strong {
+  font-family: var(--font-schoolbell), cursive;
+  font-weight: 400;
+  font-size: 23px;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  margin-top: 4px;
+}
+.avatar-person > button,
+.avatar-caption {
+  min-height: 32px;
+  font-size: 11px;
+  margin-top: 3px;
+}
+.avatar-caption {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+}
+.avatar-between {
+  flex-shrink: 0;
+  color: var(--accent);
+  fill: var(--accent);
+  opacity: 0.65;
+}
+.gesture-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gesture-actions button {
+  background: var(--paper);
+  gap: 8px;
+  min-width: 92px;
+}
+.gesture-actions button > span {
+  font-size: 21px;
+}
+.gesture-status {
+  min-height: 20px;
+  margin-top: 12px;
+}
+.playground-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 10px;
+  color: var(--ink);
+}
+.gesture-inbox {
+  max-width: 620px;
+  margin: auto;
+}
+.gesture-bubble {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 18px 18px 18px 5px;
+  text-align: left;
+}
+.gesture-bubble > div {
+  flex: 1;
+  min-width: 0;
+}
+.gesture-bubble h3 {
+  font-family: var(--font-schoolbell), cursive;
+  font-weight: 400;
+  font-size: 24px;
+}
+.gesture-bubble p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+.gesture-bubble time {
+  font-size: 10px;
+  color: var(--muted);
+}
+.gesture-emoji {
+  font-size: 33px;
+  flex-shrink: 0;
+}
+.avatar-dialog {
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.avatar-editor-preview {
+  display: flex;
+  justify-content: center;
+}
+.avatar-editor-preview .couple-avatar {
+  width: 130px;
+}
+.avatar-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 10px 0 22px;
+}
+.avatar-fields > div {
+  min-width: 0;
+}
+.avatar-fields label {
+  display: block;
+  margin-bottom: 6px;
+}
+@media (max-width: 760px) {
+  .couple-playground {
+    padding: 22px 16px;
+  }
+  .avatar-pair {
+    gap: 12px;
+  }
+  .avatar-person {
+    width: 115px;
+  }
+  .avatar-between {
+    width: 20px;
+  }
+  .gesture-actions {
+    gap: 7px;
+  }
+  .gesture-actions button {
+    min-width: 0;
+    flex: 1;
+    padding: 8px;
+  }
+  .gesture-bubble {
+    gap: 9px;
+    padding: 12px;
+  }
+  .gesture-bubble h3 {
+    font-size: 21px;
+  }
+  .gesture-emoji {
+    font-size: 26px;
+  }
+}
+
+.gesture-actions [data-slot="button"][data-size="default"] {
+  padding-inline: 12px;
+}
+.notebook-compact .notebook-note {
+  display: flex;
+  flex-direction: column;
+}
+.notebook-compact .notebook-note-heading,
+.notebook-compact .notebook-note footer {
+  flex-shrink: 0;
+}
+.notebook-compact .notebook-note > p {
+  min-height: 0;
+}
+@media (max-width: 760px) {
+  .gesture-actions [data-slot="button"][data-size="default"] {
+    padding-inline: 8px;
+  }
+}
+
+.avatar-fields [data-slot="native-select-wrapper"] {
+  width: 100%;
+}
+.avatar-fields [data-slot="native-select"] {
+  height: 44px;
+  padding: 8px 32px 8px 12px;
+  line-height: 20px;
+  font-size: 13px;
+}

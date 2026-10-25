@@ -147,48 +147,50 @@ export function ShortNotesNotebook({
                     Gathering your little love notes…
                   </p>
                 ) : sorted.length ? (
-                  sorted.slice(page * 3, page * 3 + 3).map((note) => (
-                    <article className="notebook-note" key={note.id}>
-                      <div className="notebook-note-heading">
-                        <h3>{note.title}</h3>
-                        <div className="notebook-note-actions">
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label={`Edit ${note.title}`}
-                            onClick={() => onEdit(note)}
-                          >
-                            <Pencil size={13} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            disabled={busy}
-                            aria-label={`Delete ${note.title}`}
-                            onClick={() => onDelete(note)}
-                          >
-                            <Trash2 size={13} />
-                          </Button>
+                  sorted
+                    .slice(page * 3, page * 3 + (compact ? 2 : 3))
+                    .map((note) => (
+                      <article className="notebook-note" key={note.id}>
+                        <div className="notebook-note-heading">
+                          <h3>{note.title}</h3>
+                          <div className="notebook-note-actions">
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              aria-label={`Edit ${note.title}`}
+                              onClick={() => onEdit(note)}
+                            >
+                              <Pencil size={13} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              disabled={busy}
+                              aria-label={`Delete ${note.title}`}
+                              onClick={() => onDelete(note)}
+                            >
+                              <Trash2 size={13} />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      {note.detail && <p>{note.detail}</p>}
-                      <footer>
-                        <span>
-                          with love,{" "}
-                          {note.created_by === profile.id
-                            ? profile.username
-                            : partner.username}{" "}
-                          ♡
-                        </span>
-                        <time dateTime={note.created_at}>
-                          {new Date(note.created_at).toLocaleDateString(
-                            undefined,
-                            { month: "short", day: "numeric" },
-                          )}
-                        </time>
-                      </footer>
-                    </article>
-                  ))
+                        {note.detail && <p>{note.detail}</p>}
+                        <footer>
+                          <span>
+                            with love,{" "}
+                            {note.created_by === profile.id
+                              ? profile.username
+                              : partner.username}{" "}
+                            ♡
+                          </span>
+                          <time dateTime={note.created_at}>
+                            {new Date(note.created_at).toLocaleDateString(
+                              undefined,
+                              { month: "short", day: "numeric" },
+                            )}
+                          </time>
+                        </footer>
+                      </article>
+                    ))
                 ) : (
                   <div className="notebook-empty">
                     <span aria-hidden="true">♡</span>
@@ -207,7 +209,7 @@ export function ShortNotesNotebook({
       <div className="notebook-controls">
         {compact ? (
           <>
-            <span>Three little notes, one little page.</span>
+            <span>Two little notes, one little page.</span>
             <Button variant="ghost" onClick={onOpen}>
               Open notebook <ArrowRight size={15} />
             </Button>

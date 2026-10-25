@@ -31,3 +31,21 @@ test("place emojis, cuisine icons, and legacy goal progress stay compatible", ()
   assert.equal(foodIcon("Custom cuisine"), "🍽️");
   assert.equal(goalProgress({ kind: "Goals", done: true, progress: 0 }), 100);
 });
+
+test("avatar configuration accepts bounded choices and falls back for invalid tokens", async () => {
+  const { avatarConfig, defaultAvatar } = await import("../src/lib/avatars.ts");
+  assert.deepEqual(avatarConfig(), defaultAvatar);
+  assert.deepEqual(
+    avatarConfig({
+      skin: "__proto__",
+      headwear: "<script>",
+      glasses: "constructor",
+    }),
+    defaultAvatar,
+  );
+  assert.equal(
+    avatarConfig({ headwear: "hijab", skin: "deep", glasses: "square" })
+      .headwear,
+    "hijab",
+  );
+});

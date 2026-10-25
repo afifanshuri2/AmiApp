@@ -38,7 +38,7 @@ import { ShortNotesNotebook } from "./shortnotes-notebook";
 import { EntryCollection } from "./entry-collection";
 import { GoalsPanel, GoalDetail } from "./goals-panel";
 import { ReminderStrip } from "./reminder-strip";
-import { goalProgress } from "../lib/everyday";
+import { CouplePlayground } from "./couple-playground";
 const icons = [
   NotebookPen,
   Flag,
@@ -189,7 +189,6 @@ export function Dashboard({
     );
     if (ok) setEditor(null);
   }
-  const completed = entries.filter((e) => e.done).length;
   const goals = entries.filter(
     (entry) => entry.kind === "Goals" || entry.kind === "Ambitions",
   );
@@ -448,35 +447,12 @@ export function Dashboard({
                 </div>
               ) : view === "Dashboard" ? (
                 <>
-                  <section className="hero-card">
-                    <div>
-                      <span className="pill">♡ JUST THE TWO OF US</span>
-                      <h2>
-                        Small moments.
-                        <br />
-                        <em>Our favorite kind.</em>
-                      </h2>
-                      <p>
-                        A note to say “thinking of you”. A plan for someday.
-                        <br />
-                        The beautiful ordinary, all in one place.
-                      </p>
-                      <button
-                        className="text-link"
-                        onClick={() => setView("ShortNotes")}
-                      >
-                        Leave a little love note <ArrowUpRight size={16} />
-                      </button>
-                    </div>
-                    <div className="hero-art" aria-hidden="true">
-                      <div className="orbit" />
-                      <div className="heart heart-one">♥</div>
-                      <div className="heart heart-two">♥</div>
-                      <span className="star star-one">✧</span>
-                      <span className="star star-two">✦</span>
-                      <span className="art-caption">you + me, always.</span>
-                    </div>
-                  </section>
+                  <CouplePlayground
+                    key={profile.id}
+                    profile={profile}
+                    partner={partner}
+                    theme={theme}
+                  />
                   {togetherSince && <TogetherCard since={togetherSince} />}
                   <ReminderStrip
                     todos={entries.filter((entry) => entry.kind === "Todos")}
@@ -486,27 +462,6 @@ export function Dashboard({
                     onDelete={deleteEntry}
                     onToggle={toggleEntry}
                   />
-                  <div className="stats">
-                    <div>
-                      <span>♡</span>
-                      <strong>
-                        {entries.filter((e) => e.kind === "ShortNotes").length}
-                      </strong>
-                      <small>little love notes</small>
-                    </div>
-                    <div>
-                      <Flag size={20} />
-                      <strong>
-                        {goals.filter((e) => goalProgress(e) < 100).length}
-                      </strong>
-                      <small>dreams in the making</small>
-                    </div>
-                    <div>
-                      <CheckSquare size={20} />
-                      <strong>{completed}</strong>
-                      <small>little wins together</small>
-                    </div>
-                  </div>
                   <div className="grid-heading">
                     <h2>A little of our everyday</h2>
                     <Button

@@ -29,7 +29,7 @@ export function ReminderStrip({
   return (
     <section className="reminders-section" aria-label="To-dos & reminders">
       <div className="section-heading">
-        <h2>Little things to do</h2>
+        <h2>{todos.filter((todo) => !todo.done).length} of things to do</h2>
         <span className="muted">A thought, a date, done.</span>
       </div>
       <div className="reminder-strip">

@@ -60,8 +60,10 @@ export function EntryCollection({
         !foodCategory ||
         e.category === foodCategory),
   );
+  if (compact && kind === "Groceries")
+    list.sort((a, b) => b.created_at.localeCompare(a.created_at));
   const slotGrid = compact && (kind === "Countdowns" || kind === "Places");
-  const previewLimit = slotGrid ? 4 : 3;
+  const previewLimit = slotGrid ? 4 : kind === "Groceries" ? 1 : 3;
   const slotLabel = kind === "Places" ? "Add place" : "Add countdown";
   return (
     <EverydayCard
