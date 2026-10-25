@@ -26,7 +26,6 @@ create table public.partner_gestures (
  kind text not null check(kind in ('poke','nudge','kiss')),
  created_at timestamptz not null default now(),
  read_at timestamptz,
- dispatched_at timestamptz,
  check(sender_id <> recipient_id)
 );
 create index partner_gestures_sender_created on public.partner_gestures(sender_id,created_at desc);
@@ -36,7 +35,6 @@ alter table public.partner_gestures enable row level security;
 revoke all on public.partner_gestures from public,anon,authenticated;
 grant select on public.partner_gestures to authenticated;
 grant update(read_at) on public.partner_gestures to authenticated;
-grant select,update on public.partner_gestures to service_role;
 create policy gestures_read on public.partner_gestures for select to authenticated using (
  couple_id=(select private.my_couple()) and (sender_id=(select auth.uid()) or recipient_id=(select auth.uid()))
 );
@@ -68,19 +66,3 @@ create function public.send_partner_gesture(gesture_kind text) returns uuid
  language sql security invoker set search_path='' as $$ select private.send_partner_gesture(gesture_kind); $$;
 revoke all on function private.send_partner_gesture(text),public.send_partner_gesture(text) from public,anon,authenticated;
 grant execute on function private.send_partner_gesture(text),public.send_partner_gesture(text) to authenticated;
-
-create function private.notify_partner_gesture() returns trigger language plpgsql security definer set search_path='' as $$
-declare hook text;
-begin
- if auth.uid() is distinct from new.sender_id then raise exception 'Invalid gesture author'; end if;
- if exists(select 1 from public.push_subscriptions where user_id=new.recipient_id) then
-  select s.decrypted_secret into hook from private.push_config c join vault.decrypted_secrets s on s.id=c.webhook_secret_id where c.id=true;
-  if hook is not null then
-   perform net.http_post(url:='https://cxvovxdmhgoyrnfxzkpi.supabase.co/functions/v1/shortnote-push',headers:=jsonb_build_object('Content-Type','application/json','x-ami-push-secret',hook),body:=jsonb_build_object('gestureId',new.id),timeout_milliseconds:=10000);
-  end if;
- end if;
- return new;
-end;
-$$;
-revoke all on function private.notify_partner_gesture() from public,anon,authenticated;
-create trigger partner_gesture_notification after insert on public.partner_gestures for each row execute function private.notify_partner_gesture();

@@ -39,6 +39,7 @@ import { EntryCollection } from "./entry-collection";
 import { GoalsPanel, GoalDetail } from "./goals-panel";
 import { ReminderStrip } from "./reminder-strip";
 import { CouplePlayground } from "./couple-playground";
+import { GestureToasts } from "./gesture-toasts";
 const icons = [
   NotebookPen,
   Flag,
@@ -488,6 +489,12 @@ export function Dashboard({
           </AnimatePresence>
         </main>
       </div>
+      <GestureToasts
+        key={profile.id}
+        profile={profile}
+        partner={partner}
+        theme={theme}
+      />
       {editor && (
         <EntryEditor
           theme={theme}

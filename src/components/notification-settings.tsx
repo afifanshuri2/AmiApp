@@ -54,10 +54,10 @@ export function NotificationSettings({ userId }: { userId: string }) {
   }
   return (
     <Card className="card notification-settings">
-      <h2>Little love from your person</h2>
+      <h2>Notes from your person</h2>
       <p className="muted">
-        Get a push alert and a badge for ShortNotes, pokes, nudges, and kisses
-        from your partner. Your notes stay private.
+        Get a push alert and an unread badge when your partner leaves a
+        ShortNote. The note itself stays private.
       </p>
       <p className="muted">
         On iPhone: add AmiApp to your Home Screen, open it from its icon, then

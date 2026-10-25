@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Heart, Pencil, RefreshCw, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
@@ -14,7 +13,6 @@ import {
   type AvatarConfig,
   type AvatarRecord,
   type GestureKind,
-  type PartnerGesture,
 } from "../lib/avatars";
 import {
   coupleInteractions,
@@ -148,8 +146,7 @@ export function CouplePlayground({
   theme: string;
   store?: CoupleInteractionStore;
 }) {
-  const [avatars, setAvatars] = useState<AvatarRecord[]>([]),
-    [inbox, setInbox] = useState<PartnerGesture[]>([]);
+  const [avatars, setAvatars] = useState<AvatarRecord[]>([]);
   const [editing, setEditing] = useState(false),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
@@ -159,7 +156,6 @@ export function CouplePlayground({
   const mounted = useRef(false),
     sending = useRef(false),
     retry = useRef<() => void>(() => {});
-  const reduced = useReducedMotion();
   useEffect(() => {
     mounted.current = true;
     let active = true,
@@ -171,13 +167,6 @@ export function CouplePlayground({
         const data = await store.load(profile.id);
         if (!active) return;
         setAvatars(data.avatars);
-        setInbox(
-          data.inbox.filter(
-            (item) =>
-              item.recipient_id === profile.id &&
-              Object.hasOwn(gestures, item.kind),
-          ),
-        );
         setReady(true);
         setError("");
       } catch (err) {
@@ -300,79 +289,6 @@ export function CouplePlayground({
           </Button>
         </div>
       )}
-      <div
-        className="gesture-inbox"
-        aria-live="polite"
-        aria-relevant="additions"
-      >
-        <AnimatePresence initial={false}>
-          {inbox.slice(0, 3).map((item) => (
-            <motion.article
-              className={`gesture-bubble gesture-${item.kind}`}
-              key={item.id}
-              initial={reduced ? false : { opacity: 0, y: 12, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reduced ? 0 : 0.25 }}
-            >
-              <span className="gesture-emoji" aria-hidden="true">
-                {gestures[item.kind].emoji}
-              </span>
-              <div>
-                <h3>{gestures[item.kind].received}</h3>
-                <p>
-                  From {partner.username} ♡ {gestures[item.kind].detail}
-                </p>
-                <time dateTime={item.created_at}>
-                  {new Date(item.created_at).toLocaleString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </time>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={busy}
-                aria-label={`Keep ${gestures[item.kind].label.toLowerCase()} in my heart`}
-                onClick={async () => {
-                  if (sending.current) return;
-                  sending.current = true;
-                  setBusy(true);
-                  try {
-                    await store.acknowledge(item.id);
-                    if (mounted.current) {
-                      setInbox((current) =>
-                        current.filter((g) => g.id !== item.id),
-                      );
-                      window.dispatchEvent(new Event("ami-gestures-changed"));
-                    }
-                  } catch (err) {
-                    if (mounted.current)
-                      setError(
-                        err instanceof Error
-                          ? err.message
-                          : "Could not tuck this away.",
-                      );
-                  } finally {
-                    sending.current = false;
-                    if (mounted.current) setBusy(false);
-                  }
-                }}
-              >
-                <Heart size={17} />
-              </Button>
-            </motion.article>
-          ))}
-        </AnimatePresence>
-        {inbox.length > 3 && (
-          <p className="muted">
-            {inbox.length - 3} more little moments waiting ♡
-          </p>
-        )}
-      </div>
       {editing && (
         <AvatarEditor
           initial={mine}
