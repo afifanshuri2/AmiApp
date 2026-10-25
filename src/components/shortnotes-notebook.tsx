@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Entry, Profile } from "../lib/types";
+import { FeatureCard } from "./feature-card";
 
 export function ShortNotesNotebook({
   notes,
@@ -51,9 +52,10 @@ export function ShortNotesNotebook({
     setPosition({ page: next, direction });
   }
   return (
-    <section
+    <FeatureCard
       className={`shortnotes-notebook ${compact ? "notebook-compact" : ""}`}
       aria-label="ShortNotes notebook"
+      onOpen={compact ? onOpen : undefined}
     >
       <div className="notebook-cover">
         <div className="notebook-binding" aria-hidden="true">
@@ -239,6 +241,6 @@ export function ShortNotesNotebook({
           </>
         )}
       </div>
-    </section>
+    </FeatureCard>
   );
 }

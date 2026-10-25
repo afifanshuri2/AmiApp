@@ -567,6 +567,13 @@ p {
   gap: 20px;
   align-items: start;
 }
+[data-clickable="true"] {
+  cursor: pointer;
+}
+[data-clickable="true"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
 .card {
   background: #fffcfa;
   border: 1px solid var(--line);

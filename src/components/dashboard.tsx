@@ -40,6 +40,7 @@ import { NotificationSettings } from "./notification-settings";
 import { useNoteBadge } from "../lib/use-note-badge";
 import { signOut } from "../lib/notifications";
 import { ShortNotesNotebook } from "./shortnotes-notebook";
+import { FeatureCard } from "./feature-card";
 const icons = [
   NotebookPen,
   Flag,
@@ -211,9 +212,11 @@ export function Dashboard({
         />
       );
     return (
-      <section
+      <FeatureCard
         className={`card collection ${kind === "Groceries" ? "sticky-note" : ""}`}
         key={kind}
+        aria-label={compact ? `Open ${labels[kind]}` : undefined}
+        onOpen={compact ? () => setView(kind) : undefined}
       >
         <div className="section-heading">
           <h2>
@@ -363,7 +366,7 @@ export function Dashboard({
             See all {list.length} <ArrowUpRight size={14} />
           </button>
         )}
-      </section>
+      </FeatureCard>
     );
   }
   return (
