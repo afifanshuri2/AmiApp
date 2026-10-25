@@ -1,7 +1,4 @@
 "use client";
-import { Label } from "./ui/label";
-import { NativeSelect } from "./ui/native-select";
-import { NativeSelectOption } from "./ui/native-select";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -14,22 +11,14 @@ import {
   MapPin,
   Hourglass,
   Plus,
-  LogOut,
-  Pencil,
-  Trash2,
-  Check,
   ArrowUpRight,
+  LogOut,
+  Check,
   RefreshCw,
   Settings,
   UtensilsCrossed,
 } from "lucide-react";
-import {
-  kinds,
-  foodCategories,
-  type Entry,
-  type Kind,
-  type Profile,
-} from "../lib/types";
+import { kinds, type Entry, type Kind, type Profile } from "../lib/types";
 import { supabase } from "../lib/supabase";
 import { Button } from "./ui/button";
 import { EntryEditor, type EntryInput } from "./entry-editor";
@@ -40,7 +29,7 @@ import { NotificationSettings } from "./notification-settings";
 import { useNoteBadge } from "../lib/use-note-badge";
 import { signOut } from "../lib/notifications";
 import { ShortNotesNotebook } from "./shortnotes-notebook";
-import { FeatureCard } from "./feature-card";
+import { EntryCollection } from "./entry-collection";
 const icons = [
   NotebookPen,
   Flag,
@@ -212,163 +201,39 @@ export function Dashboard({
         />
       );
     return (
-      <FeatureCard
-        className={`card collection ${kind === "Groceries" ? "sticky-note" : ""}`}
+      <EntryCollection
         key={kind}
-        aria-label={compact ? `Open ${labels[kind]}` : undefined}
-        onOpen={compact ? () => setView(kind) : undefined}
-      >
-        <div className="section-heading">
-          <h2>
-            <Icon size={18} />
-            {labels[kind]}
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Add ${labels[kind]}`}
-            onClick={() => setEditor({ kind })}
-          >
-            <Plus size={19} />
-          </Button>
-        </div>
-        <p className="muted section-hint">{hints[kind]}</p>
-        {kind === "FoodToTry" && !compact && (
-          <Label className="food-filter">
-            Filter by category
-            <NativeSelect
-              value={foodCategory}
-              onChange={(e) => setFoodCategory(e.target.value)}
-            >
-              <NativeSelectOption value="">All categories</NativeSelectOption>
-              {Array.from(
-                new Set([
-                  ...foodCategories,
-                  ...entries
-                    .filter((e) => e.kind === "FoodToTry")
-                    .map((e) => e.category),
-                ]),
-              )
-                .sort()
-                .map((category) => (
-                  <NativeSelectOption key={category}>
-                    {category}
-                  </NativeSelectOption>
-                ))}
-            </NativeSelect>
-          </Label>
-        )}
-        {list.length ? (
-          <div className="entry-list">
-            {(compact ? list.slice(0, 3) : list).map((e) => (
-              <article
-                key={e.id}
-                className={`entry ${e.done ? "is-done" : ""}`}
-              >
-                <div className="entry-main">
-                  {!["ShortNotes", "Countdowns", "Ambitions"].includes(
-                    kind,
-                  ) && (
-                    <button
-                      disabled={busy}
-                      className="checkbox"
-                      aria-label={`${e.done ? "Mark incomplete" : "Complete"}: ${e.title}`}
-                      aria-pressed={e.done}
-                      onClick={() =>
-                        mutate(() =>
-                          supabase!
-                            .from("entries")
-                            .update({ done: !e.done })
-                            .eq("id", e.id),
-                        )
-                      }
-                    >
-                      {e.done && <Check size={13} />}
-                    </button>
-                  )}
-                  <div className="entry-copy">
-                    <h3>{e.title}</h3>
-                    {kind === "FoodToTry" && (
-                      <div className="food-meta">
-                        <span className="food-category">{e.category}</span>
-                        <p className="food-place">{e.place_name}</p>
-                        <p className="food-location">
-                          <MapPin size={13} aria-hidden="true" />
-                          {e.location}
-                        </p>
-                        {e.done && <small>Tried together ♡</small>}
-                      </div>
-                    )}
-                    {e.detail && <p className="entry-detail">{e.detail}</p>}
-                    {e.due_date && (
-                      <p className="entry-date">
-                        {kind === "Countdowns"
-                          ? `${Math.max(0, Math.ceil((Date.parse(e.due_date + "T00:00:00") - Date.now()) / 86400000))} days · `
-                          : ""}
-                        {new Date(e.due_date + "T00:00:00").toLocaleDateString(
-                          undefined,
-                          { month: "short", day: "numeric", year: "numeric" },
-                        )}
-                      </p>
-                    )}
-                    {kind === "Ambitions" && (
-                      <div className="progress-row">
-                        <progress
-                          max={100}
-                          value={e.progress}
-                          aria-label={`${e.title} progress`}
-                        />
-                        <span>{e.progress}%</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="entry-actions">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Edit ${e.title}`}
-                    onClick={() => setEditor({ kind, entry: e })}
-                  >
-                    <Pencil size={14} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={busy}
-                    aria-label={`Delete ${e.title}`}
-                    onClick={() => {
-                      if (
-                        window.confirm(`Delete “${e.title}” for both of you?`)
-                      )
-                        void mutate(() =>
-                          supabase!.from("entries").delete().eq("id", e.id),
-                        );
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <button className="empty-state" onClick={() => setEditor({ kind })}>
-            <span>♡</span>
-            {loading
-              ? "Gathering your little things…"
-              : "Your first little thing belongs here."}
-            <small>{loading ? "One moment" : "+ Add something together"}</small>
-          </button>
-        )}
-        {compact && list.length > 3 && (
-          <button className="text-link view-all" onClick={() => setView(kind)}>
-            See all {list.length} <ArrowUpRight size={14} />
-          </button>
-        )}
-      </FeatureCard>
+        kind={kind}
+        entries={entries}
+        label={labels[kind]}
+        hint={hints[kind]}
+        Icon={Icon}
+        compact={compact}
+        loading={loading}
+        busy={busy}
+        foodCategory={foodCategory}
+        setFoodCategory={setFoodCategory}
+        onOpen={() => setView(kind)}
+        onAdd={() => setEditor({ kind })}
+        onEdit={(entry) => setEditor({ kind, entry })}
+        onDelete={(entry) => {
+          if (window.confirm(`Delete “${entry.title}” for both of you?`))
+            void mutate(() =>
+              supabase!.from("entries").delete().eq("id", entry.id),
+            );
+        }}
+        onToggle={(entry) => {
+          void mutate(() =>
+            supabase!
+              .from("entries")
+              .update({ done: !entry.done })
+              .eq("id", entry.id),
+          );
+        }}
+      />
     );
   }
+
   return (
     <div className="app-shell" data-theme={theme}>
       <aside className="sidebar">
