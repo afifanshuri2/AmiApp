@@ -12,19 +12,19 @@ Netlify hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, pairin
 
 ## Connect your other Supabase account
 
-Configured project: **Secondary → apopia company → AmiApp**, reference `cxvovxdmhgoyrnfxzkpi`. New local schema changes are not applied automatically; see the pending revision below. The primary Supabase account was not modified. Public client settings are included in `src/lib/supabase.ts`; `.env.local` can override them.
+Configured project: **Secondary → apopia company → AmiApp**, reference `cxvovxdmhgoyrnfxzkpi`. Schema updates are applied explicitly as part of a release. The primary Supabase account was not modified. Public client settings are included in `src/lib/supabase.ts`; `.env.local` can override them.
 
-## Pending local feature revision
+## Current release
 
-The earlier everyday-feature revision (`20261025064718_everyday_feature_updates.sql`) was released on October 25, 2026. The newer avatar/gesture revision is **local only**. Do not publish or apply it until the user asks for a release.
+The everyday-feature and avatar/gesture revisions were released on October 25, 2026. The avatar migration is applied to the Secondary AmiApp project, and Netlify deployment `6addbfbf0a1925713a3aa4c3` publishes source commit `8f5f9e5`.
 
-The local revision removes dashboard statistics, counts unfinished to-dos, previews two non-scrolling ShortNotes and the newest grocery list, and replaces the hero banner with customizable couple avatars. Each person can change their own skin tone, hairstyle, hair color, headwear (including hijab), glasses, and outfit color. Poke, Nudge, and Kiss go only to the paired partner. Incoming gestures appear as queued six-second toasts when the app is opened or brought to the foreground, on any tab. Toasts pause while hovered, focused, or the app is hidden; dismissal marks the action as seen. Gestures do not send push alerts or change app badges. ShortNote notifications stay unchanged.
+The current release removes dashboard statistics, counts unfinished to-dos, previews two non-scrolling ShortNotes and the newest grocery list, and replaces the hero banner with customizable couple avatars. Each person can change their own skin tone, hairstyle, hair color, headwear (including hijab), glasses, and outfit color. Poke, Nudge, and Kiss go only to the paired partner. Incoming gestures appear as queued six-second toasts when the app is opened or brought to the foreground, on any tab. Toasts pause while hovered, focused, or the app is hidden; dismissal marks the action as seen. Gestures do not send push alerts or change app badges. ShortNote notifications stay unchanged.
 
-Pending release order:
+Release procedure:
 1. Apply `supabase/migrations/20261025071846_couple_avatars_and_gestures.sql` to the existing **Secondary / AmiApp** project. It adds own-editable partner-visible avatars, couple-scoped gesture inboxes, a private identity-checking send broker, and no gesture push trigger. No existing entries are removed. Sends have a database-enforced 10-second cooldown and 60-per-24-hour cap per sender; clients cannot pick another recipient or forge timestamps.
 2. Build and publish `out/` on the existing Netlify project. No Edge Function or service-worker release is required for gestures. ShortNote push continues using the existing setup.
 
-Until that release, shared avatar saves and sending gestures are unavailable against the hosted database. UI flows are checked with an isolated in-memory preview, not writes to real couple data. PGlite tests cover avatar ownership, couple isolation, recipient-only acknowledgement, immutable fields, cooldown/daily limits, and rejected direct inserts; service-worker tests continue to cover safe ShortNote alerts and same-origin navigation.
+Shared avatar saves and sending gestures are enabled in production. The live dashboard and avatar editor were checked without changing personal data. Toast flows were checked with an isolated in-memory preview. PGlite tests cover avatar ownership, couple isolation, recipient-only acknowledgement, immutable fields, cooldown/daily limits, and rejected direct inserts; service-worker tests continue to cover safe ShortNote alerts and same-origin navigation.
 
 The combined Goals & ambitions view includes existing `Goals` and `Ambitions` entries without deleting or rewriting them. Reminders live below Together for, food uses cuisine icons, places use pinned emoji notes, and the dashboard countdown always offers four slots. Dedicated countdown pages retain all records. Preview fixtures are kept outside application routes; no sample data is inserted into Supabase.
 
