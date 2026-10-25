@@ -39,6 +39,7 @@ import { RelationshipForm } from "./relationship-form";
 import { NotificationSettings } from "./notification-settings";
 import { useNoteBadge } from "../lib/use-note-badge";
 import { signOut } from "../lib/notifications";
+import { ShortNotesNotebook } from "./shortnotes-notebook";
 const icons = [
   NotebookPen,
   Flag,
@@ -188,6 +189,27 @@ export function Dashboard({
           e.category === foodCategory),
     );
     const Icon = icons[kinds.indexOf(kind)];
+    if (kind === "ShortNotes")
+      return (
+        <ShortNotesNotebook
+          key={kind}
+          notes={list}
+          profile={profile}
+          partner={partner}
+          compact={compact}
+          loading={loading}
+          busy={busy}
+          onAdd={() => setEditor({ kind })}
+          onEdit={(entry) => setEditor({ kind, entry })}
+          onOpen={() => setView("ShortNotes")}
+          onDelete={(entry) => {
+            if (window.confirm(`Delete “${entry.title}” for both of you?`))
+              void mutate(() =>
+                supabase!.from("entries").delete().eq("id", entry.id),
+              );
+          }}
+        />
+      );
     return (
       <section
         className={`card collection ${kind === "Groceries" ? "sticky-note" : ""}`}
@@ -295,15 +317,6 @@ export function Dashboard({
                         />
                         <span>{e.progress}%</span>
                       </div>
-                    )}
-                    {kind === "ShortNotes" && (
-                      <small>
-                        with love,{" "}
-                        {e.created_by === profile.id
-                          ? profile.username
-                          : partner.username}{" "}
-                        ♡
-                      </small>
                     )}
                   </div>
                 </div>

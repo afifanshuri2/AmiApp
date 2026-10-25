@@ -1046,3 +1046,220 @@ input::placeholder {
     transition: none !important;
   }
 }
+/* ShortNotes keeps the shared editor and data, presented as a paper notebook. */
+.shortnotes-notebook {
+  min-width: 0;
+  width: 100%;
+}
+.notebook-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 18px;
+}
+.notebook-heading .eyebrow {
+  margin-bottom: 6px;
+  font-size: 8px;
+}
+.notebook-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.notebook-heading h2 svg {
+  color: var(--accent);
+}
+.notebook-cover {
+  position: relative;
+  padding: 10px 9px 12px 22px;
+  background: var(--hero);
+  border: 1px solid var(--line);
+  border-radius: 8px 18px 18px 8px;
+  box-shadow: 0 9px 24px #44353c09;
+}
+.notebook-cover::after {
+  content: "";
+  position: absolute;
+  inset: 14px 5px 5px 28px;
+  border-radius: 3px 12px 12px 3px;
+  border-bottom: 4px double var(--line);
+  pointer-events: none;
+}
+.notebook-binding {
+  position: absolute;
+  left: 8px;
+  top: 46px;
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 2;
+  pointer-events: none;
+}
+.notebook-binding i {
+  width: 24px;
+  height: 9px;
+  border: 2px solid #ad9492;
+  border-radius: 8px;
+  background: linear-gradient(#f6efeb, #d7c5be);
+  box-shadow: 0 2px 2px #44353c15;
+}
+.notebook-stage {
+  perspective: 1200px;
+  outline-offset: 5px;
+}
+.notebook-page {
+  position: relative;
+  min-height: 530px;
+  padding: 25px 25px 38px 35px;
+  border-radius: 3px 12px 12px 3px;
+  background:
+    linear-gradient(90deg, #44353c09, transparent 20px),
+    repeating-linear-gradient(transparent 0 27px, #c5b9b52b 27px 28px), #fffdf7;
+  color: #44353c;
+  box-shadow: 1px 2px 4px #44353c12;
+  transform-origin: left center;
+  touch-action: pan-y;
+  backface-visibility: hidden;
+}
+.notebook-page::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #dca4ad55;
+  pointer-events: none;
+}
+.notebook-page-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 9px;
+  color: #9a7c83;
+  letter-spacing: 1px;
+  margin-bottom: 21px;
+}
+.notebook-page-label > span:last-child {
+  font-size: 20px;
+  line-height: 12px;
+}
+.notebook-note {
+  padding: 0 0 21px;
+  margin-bottom: 18px;
+  border-bottom: 1px dashed #bca19c66;
+}
+.notebook-note:last-of-type {
+  border-bottom: 0;
+}
+.notebook-note-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.notebook-note h3 {
+  font-family: var(--font-schoolbell), cursive;
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.notebook-note > p {
+  font-family: var(--font-schoolbell), cursive;
+  font-size: 19px;
+  line-height: 28px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 4px;
+}
+.notebook-note-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  color: #9a7c83;
+}
+.notebook-note footer {
+  font-family: var(--font-schoolbell), cursive;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+  color: #9a7c83;
+  margin-top: 9px;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+.notebook-page-number {
+  position: absolute;
+  bottom: 13px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font:
+    italic 11px Georgia,
+    serif;
+  color: #9a7c83;
+}
+.notebook-empty {
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  color: #9a7c83;
+  font-size: 12px;
+}
+.notebook-empty > span {
+  font-size: 42px;
+  color: var(--accent);
+}
+.notebook-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.notebook-controls > span {
+  text-align: center;
+}
+.notebook-controls small {
+  display: block;
+  font-size: 9px;
+  margin-top: 5px;
+}
+.notebook-compact .notebook-controls {
+  flex-wrap: wrap;
+}
+.notebook-compact .notebook-controls > span {
+  font-size: 9px;
+}
+.notebook-compact .notebook-controls button {
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .notebook-page {
+    padding: 22px 17px 38px 31px;
+  }
+  .notebook-page::before {
+    left: 21px;
+  }
+  .notebook-note h3 {
+    font-size: 22px;
+  }
+  .notebook-note-actions {
+    gap: 0;
+  }
+  .notebook-page-label {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+}
