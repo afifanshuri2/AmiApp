@@ -55,23 +55,6 @@ export function ShortNotesNotebook({
       className={`shortnotes-notebook ${compact ? "notebook-compact" : ""}`}
       aria-label="ShortNotes notebook"
     >
-      <div className="notebook-heading">
-        <div>
-          <p className="eyebrow">Our little keepsakes</p>
-          <h2>
-            <NotebookPen size={20} />
-            ShortNotes
-          </h2>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Add ShortNotes"
-          onClick={onAdd}
-        >
-          <Plus size={19} />
-        </Button>
-      </div>
       <div className="notebook-cover">
         <div className="notebook-binding" aria-hidden="true">
           {Array.from({ length: 6 }, (_, i) => (
@@ -132,6 +115,22 @@ export function ShortNotesNotebook({
                   turn(info.offset.x < 0 ? 1 : -1);
               }}
             >
+              <div className="section-heading notebook-heading">
+                <div>
+                  <h2>
+                    <NotebookPen size={18} />
+                    ShortNotes
+                  </h2>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Add ShortNotes"
+                  onClick={onAdd}
+                >
+                  <Plus size={19} />
+                </Button>
+              </div>
               <div className="notebook-page-label">
                 <span>
                   {compact || page === 0

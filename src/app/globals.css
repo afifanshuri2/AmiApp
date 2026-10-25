@@ -1052,22 +1052,7 @@ input::placeholder {
   width: 100%;
 }
 .notebook-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 0 18px;
-}
-.notebook-heading .eyebrow {
-  margin-bottom: 6px;
-  font-size: 8px;
-}
-.notebook-heading h2 {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.notebook-heading h2 svg {
-  color: var(--accent);
+  margin: 0 0 2px;
 }
 .notebook-cover {
   position: relative;
@@ -1111,7 +1096,7 @@ input::placeholder {
 .notebook-page {
   position: relative;
   min-height: 530px;
-  padding: 25px 25px 38px 35px;
+  padding: 14px 25px 38px 35px;
   border-radius: 3px 12px 12px 3px;
   background:
     linear-gradient(90deg, #44353c09, transparent 20px),
@@ -1247,7 +1232,7 @@ input::placeholder {
 }
 @media (max-width: 760px) {
   .notebook-page {
-    padding: 22px 17px 38px 31px;
+    padding: 14px 17px 38px 31px;
   }
   .notebook-page::before {
     left: 21px;
