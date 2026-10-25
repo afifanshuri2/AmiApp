@@ -439,6 +439,120 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
         );
       },
     );
+    await check(
+      "goal updates are atomic, append-only, and isolated to the couple",
+      async () => {
+        const goal = (
+          await as(
+            0,
+            "insert into public.entries(couple_id,kind,title,created_by) values($1,'Goals','Shared dream',$2) returning id",
+            [coupleA, ids[0]],
+          )
+        ).rows[0].id;
+        await as(1, "select public.add_goal_update($1,'Our first step',35)", [
+          goal,
+        ]);
+        assert.equal(
+          (
+            await as(0, "select progress from public.entries where id=$1", [
+              goal,
+            ])
+          ).rows[0].progress,
+          35,
+        );
+        const history = await as(
+          0,
+          "select * from public.goal_updates where entry_id=$1",
+          [goal],
+        );
+        assert.equal(history.rows.length, 1);
+        assert.equal(history.rows[0].created_by, ids[1]);
+        assert.equal(
+          (
+            await as(2, "select * from public.goal_updates where entry_id=$1", [
+              goal,
+            ])
+          ).rows.length,
+          0,
+        );
+        await assert.rejects(
+          as(2, "select public.add_goal_update($1,'Wrong couple',50)", [goal]),
+        );
+        await assert.rejects(
+          as(null, "select public.add_goal_update($1,'Anonymous',50)", [goal]),
+        );
+        await assert.rejects(
+          as(0, "select public.add_goal_update($1,'Invalid',101)", [goal]),
+        );
+        assert.equal(
+          (
+            await as(0, "select progress from public.entries where id=$1", [
+              goal,
+            ])
+          ).rows[0].progress,
+          35,
+        );
+        assert.equal(
+          (
+            await as(0, "select * from public.goal_updates where entry_id=$1", [
+              goal,
+            ])
+          ).rows.length,
+          1,
+        );
+        await assert.rejects(
+          as(
+            0,
+            "insert into public.goal_updates(entry_id,description,progress,created_by) values($1,'Forged author',40,$2)",
+            [goal, ids[1]],
+          ),
+        );
+        await assert.rejects(
+          as(
+            0,
+            "update public.goal_updates set description='Overwrite' where entry_id=$1",
+            [goal],
+          ),
+        );
+        await assert.rejects(
+          as(0, "delete from public.goal_updates where entry_id=$1", [goal]),
+        );
+        await as(0, "select public.add_goal_update($1,'We did it',100)", [
+          goal,
+        ]);
+        assert.equal(
+          (await as(1, "select done from public.entries where id=$1", [goal]))
+            .rows[0].done,
+          true,
+        );
+        const reminder = (
+          await as(
+            0,
+            "insert into public.entries(couple_id,kind,title,detail,due_at,created_by) values($1,'Todos','Coffee','Coffee together','2026-11-15T08:00:00Z',$2) returning id,due_at",
+            [coupleA, ids[0]],
+          )
+        ).rows[0];
+        assert.ok(reminder.due_at);
+        await assert.rejects(
+          as(0, "select public.add_goal_update($1,'Not a goal',50)", [
+            reminder.id,
+          ]),
+        );
+        const place = (
+          await as(
+            0,
+            "insert into public.entries(couple_id,kind,title,emoji,created_by) values($1,'Places','Japan','🇯🇵',$2) returning id,emoji",
+            [coupleA, ids[0]],
+          )
+        ).rows[0];
+        assert.equal(place.emoji, "🇯🇵");
+        assert.equal(
+          (await as(2, "select * from public.entries where id=$1", [place.id]))
+            .rows.length,
+          0,
+        );
+      },
+    );
   } finally {
     await db.close();
   }

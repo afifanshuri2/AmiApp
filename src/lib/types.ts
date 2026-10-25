@@ -21,9 +21,22 @@ export type Entry = {
   done: boolean;
   progress: number;
   due_date: string | null;
+  due_at?: string | null;
+  emoji?: string;
   created_by: string;
   created_at: string;
 };
+export type GoalUpdate = {
+  id: string;
+  entry_id: string;
+  description: string;
+  progress: number;
+  created_by: string;
+  created_at: string;
+};
+export const featureKinds = kinds.filter(
+  (kind) => kind !== "Goals" && kind !== "Todos",
+);
 export type Profile = {
   id: string;
   username: string;

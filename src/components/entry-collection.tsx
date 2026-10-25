@@ -15,6 +15,7 @@ import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 import { Button } from "./ui/button";
 import { EverydayCard } from "./everyday-card";
 import { foodCategories, type Entry, type Kind } from "../lib/types";
+import { foodIcon } from "../lib/everyday";
 
 export function EntryCollection({
   kind,
@@ -62,6 +63,7 @@ export function EntryCollection({
   return (
     <EverydayCard
       kind={kind}
+      className={`${kind === "FoodToTry" ? "food-simple" : ""} ${kind === "Places" ? "pinned-places" : ""} ${compact ? "collection-preview" : ""}`}
       key={kind}
       aria-label={compact ? `Open ${label}` : undefined}
       onOpen={compact ? onOpen : undefined}
@@ -107,117 +109,152 @@ export function EntryCollection({
           </NativeSelect>
         </div>
       )}
-      {list.length ? (
-        <div className="entry-list">
-          {(compact ? list.slice(0, 3) : list).map((e) => (
-            <article key={e.id} className={`entry ${e.done ? "is-done" : ""}`}>
-              <div className="entry-main">
-                {!["ShortNotes", "Countdowns", "Ambitions"].includes(kind) && (
-                  <button
-                    disabled={busy}
-                    className="checkbox"
-                    aria-label={`${e.done ? "Mark incomplete" : "Complete"}: ${e.title}`}
-                    aria-pressed={e.done}
-                    onClick={() => onToggle(e)}
-                  >
-                    {e.done && (
-                      <motion.span
-                        className="completion-tick"
-                        initial={reduced ? false : { scale: 0.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.18 }}
+      {list.length || (kind === "Countdowns" && compact) ? (
+        <div
+          className={`entry-list ${kind === "Countdowns" && compact ? "countdown-slots" : ""}`}
+        >
+          {(compact ? list.slice(0, kind === "Countdowns" ? 4 : 3) : list).map(
+            (e) => (
+              <article
+                key={e.id}
+                className={`entry ${e.done ? "is-done" : ""}`}
+              >
+                <div className="entry-main">
+                  {!["ShortNotes", "Countdowns", "Ambitions"].includes(kind) &&
+                    !(kind === "Places" && compact) && (
+                      <button
+                        disabled={busy}
+                        className="checkbox"
+                        aria-label={`${e.done ? "Mark incomplete" : "Complete"}: ${e.title}`}
+                        aria-pressed={e.done}
+                        onClick={() => onToggle(e)}
                       >
-                        <Check size={13} />
-                      </motion.span>
-                    )}
-                  </button>
-                )}
-                <div className="entry-copy">
-                  {kind === "Countdowns" && e.due_date && (
-                    <div className="calendar-count" aria-label="Days remaining">
-                      <strong>
-                        {Math.max(
-                          0,
-                          Math.ceil(
-                            (Date.parse(e.due_date + "T00:00:00") -
-                              Date.now()) /
-                              86400000,
-                          ),
+                        {e.done && (
+                          <motion.span
+                            className="completion-tick"
+                            initial={
+                              reduced ? false : { scale: 0.6, opacity: 0 }
+                            }
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.18 }}
+                          >
+                            <Check size={13} />
+                          </motion.span>
                         )}
-                      </strong>
-                      <span>days to go</span>
-                    </div>
-                  )}
-                  <h3>{e.title}</h3>
+                      </button>
+                    )}
                   {kind === "FoodToTry" && (
-                    <div className="food-meta">
-                      <span className="food-category">{e.category}</span>
-                      <p className="food-place">{e.place_name}</p>
-                      <p className="food-location">
-                        <MapPin size={13} aria-hidden="true" />
-                        {e.location}
-                      </p>
-                    </div>
-                  )}
-                  {e.detail && <p className="entry-detail">{e.detail}</p>}
-                  {e.due_date && (
-                    <p className="entry-date">
-                      {new Date(e.due_date + "T00:00:00").toLocaleDateString(
-                        undefined,
-                        { month: "short", day: "numeric", year: "numeric" },
-                      )}
-                    </p>
-                  )}
-                  {(kind === "Places" || kind === "FoodToTry") && e.done && (
-                    <motion.small
-                      className="memory-stamp"
-                      initial={
-                        reduced
-                          ? false
-                          : { scale: 1.12, opacity: 0, rotate: -9 }
-                      }
-                      animate={{ scale: 1, opacity: 1, rotate: -4 }}
-                      transition={{ duration: 0.22 }}
+                    <span
+                      className="food-icon"
+                      role="img"
+                      aria-label={e.category}
+                      title={e.category}
                     >
-                      {kind === "Places"
-                        ? "Visited together"
-                        : "Tried together"}{" "}
-                      ♡
-                    </motion.small>
+                      {foodIcon(e.category)}
+                    </span>
                   )}
-                  {kind === "Ambitions" && (
-                    <div className="progress-row">
-                      <progress
-                        max={100}
-                        value={e.progress}
-                        aria-label={`${e.title} progress`}
-                      />
-                      <span>{e.progress}%</span>
-                    </div>
-                  )}
+                  <div className="entry-copy">
+                    {kind === "Countdowns" && e.due_date && (
+                      <div
+                        className="calendar-count"
+                        aria-label="Days remaining"
+                      >
+                        <strong>
+                          {Math.max(
+                            0,
+                            Math.ceil(
+                              (Date.parse(e.due_date + "T00:00:00") -
+                                Date.now()) /
+                                86400000,
+                            ),
+                          )}
+                        </strong>
+                        <span>days to go</span>
+                      </div>
+                    )}
+                    <h3>
+                      {kind === "Places" && (
+                        <span
+                          className="place-emoji"
+                          role="img"
+                          aria-label="Place emoji"
+                        >
+                          {e.emoji || "📍"}
+                        </span>
+                      )}
+                      {e.title}
+                    </h3>
+                    {kind === "FoodToTry" && (
+                      <div className="food-meta">
+                        <p className="food-location">
+                          <MapPin size={13} aria-hidden="true" />
+                          {e.place_name}
+                          {e.place_name && e.location ? " · " : ""}
+                          {e.location}
+                        </p>
+                      </div>
+                    )}
+                    {e.detail && !(kind === "Places" && compact) && (
+                      <p className="entry-detail">{e.detail}</p>
+                    )}
+                    {e.due_date && (
+                      <p className="entry-date">
+                        {new Date(e.due_date + "T00:00:00").toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric", year: "numeric" },
+                        )}
+                      </p>
+                    )}
+                    {kind === "Ambitions" && (
+                      <div className="progress-row">
+                        <progress
+                          max={100}
+                          value={e.progress}
+                          aria-label={`${e.title} progress`}
+                        />
+                        <span>{e.progress}%</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="entry-actions">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Edit ${e.title}`}
-                  onClick={() => onEdit(e)}
-                >
-                  <Pencil size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={busy}
-                  aria-label={`Delete ${e.title}`}
-                  onClick={() => onDelete(e)}
-                >
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            </article>
-          ))}
+                {!(kind === "Places" && compact) && (
+                  <div className="entry-actions">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Edit ${e.title}`}
+                      onClick={() => onEdit(e)}
+                    >
+                      <Pencil size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={busy}
+                      aria-label={`Delete ${e.title}`}
+                      onClick={() => onDelete(e)}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                )}
+              </article>
+            ),
+          )}
+          {kind === "Countdowns" &&
+            compact &&
+            Array.from({ length: Math.max(0, 4 - list.length) }, (_, index) => (
+              <Button
+                variant="ghost"
+                className="countdown-add"
+                key={`empty-${index}`}
+                aria-label="Add countdown"
+                onClick={onAdd}
+              >
+                <Plus size={25} />
+                <span>Add countdown</span>
+              </Button>
+            ))}
         </div>
       ) : (
         <button className="empty-state" onClick={onAdd}>
@@ -228,7 +265,7 @@ export function EntryCollection({
           <small>{loading ? "One moment" : "+ Add something together"}</small>
         </button>
       )}
-      {compact && list.length > 3 && (
+      {compact && list.length > (kind === "Countdowns" ? 4 : 3) && (
         <button className="text-link view-all" onClick={onOpen}>
           See all {list.length} <ArrowUpRight size={14} />
         </button>

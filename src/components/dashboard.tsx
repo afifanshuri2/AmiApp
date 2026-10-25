@@ -18,7 +18,13 @@ import {
   Settings,
   UtensilsCrossed,
 } from "lucide-react";
-import { kinds, type Entry, type Kind, type Profile } from "../lib/types";
+import {
+  kinds,
+  featureKinds,
+  type Entry,
+  type Kind,
+  type Profile,
+} from "../lib/types";
 import { supabase } from "../lib/supabase";
 import { Button } from "./ui/button";
 import { EntryEditor, type EntryInput } from "./entry-editor";
@@ -30,6 +36,9 @@ import { useNoteBadge } from "../lib/use-note-badge";
 import { signOut } from "../lib/notifications";
 import { ShortNotesNotebook } from "./shortnotes-notebook";
 import { EntryCollection } from "./entry-collection";
+import { GoalsPanel, GoalDetail } from "./goals-panel";
+import { ReminderStrip } from "./reminder-strip";
+import { goalProgress } from "../lib/everyday";
 const icons = [
   NotebookPen,
   Flag,
@@ -42,8 +51,8 @@ const icons = [
 ];
 const labels: Record<Kind, string> = {
   ShortNotes: "ShortNotes",
-  Goals: "Our goals",
-  Ambitions: "Big little dreams",
+  Goals: "Goals & ambitions",
+  Ambitions: "Goals & ambitions",
   Todos: "To-dos & reminders",
   Groceries: "Grocery list",
   Places: "Places to go",
@@ -79,6 +88,10 @@ export function Dashboard({
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const [foodCategory, setFoodCategory] = useState("");
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  useEffect(() => {
+    setSelectedGoal(null);
+  }, [view]);
   const reduced = useReducedMotion();
   const unread = useNoteBadge(
     profile.id,
@@ -158,7 +171,15 @@ export function Dashboard({
     const current = editor;
     const ok = await mutate(() =>
       current.entry
-        ? client.from("entries").update(data).eq("id", current.entry.id)
+        ? client
+            .from("entries")
+            .update({
+              ...data,
+              ...(current.kind === "Ambitions"
+                ? { done: data.progress === 100 }
+                : {}),
+            })
+            .eq("id", current.entry.id)
         : client.from("entries").insert({
             ...data,
             kind: current.kind,
@@ -169,7 +190,49 @@ export function Dashboard({
     if (ok) setEditor(null);
   }
   const completed = entries.filter((e) => e.done).length;
+  const goals = entries.filter(
+    (entry) => entry.kind === "Goals" || entry.kind === "Ambitions",
+  );
+  function deleteEntry(entry: Entry) {
+    if (window.confirm(`Delete “${entry.title}” for both of you?`))
+      void mutate(() => supabase!.from("entries").delete().eq("id", entry.id));
+  }
+  function toggleEntry(entry: Entry) {
+    void mutate(() =>
+      supabase!
+        .from("entries")
+        .update({ done: !entry.done })
+        .eq("id", entry.id),
+    );
+  }
   function section(kind: Kind, compact = false) {
+    if (kind === "Ambitions" || kind === "Goals") {
+      const goal = goals.find((goal) => goal.id === selectedGoal);
+      if (!compact && goal)
+        return (
+          <GoalDetail
+            goal={goal}
+            profile={profile}
+            partner={partner}
+            onBack={() => setSelectedGoal(null)}
+            onSaved={load}
+          />
+        );
+      return (
+        <GoalsPanel
+          key="Ambitions"
+          goals={goals}
+          compact={compact}
+          busy={busy}
+          loading={loading}
+          onOpen={() => setView("Ambitions")}
+          onSelect={(goal) => setSelectedGoal(goal.id)}
+          onAdd={() => setEditor({ kind: "Ambitions" })}
+          onEdit={(entry) => setEditor({ kind: "Ambitions", entry })}
+          onDelete={deleteEntry}
+        />
+      );
+    }
     const list = entries.filter(
       (e) =>
         e.kind === kind &&
@@ -258,8 +321,8 @@ export function Dashboard({
             Our dashboard
           </button>
           <p className="nav-caption">OUR EVERYDAY</p>
-          {kinds.map((kind, index) => {
-            const Icon = icons[index];
+          {featureKinds.map((kind) => {
+            const Icon = icons[kinds.indexOf(kind)];
             return (
               <button
                 key={kind}
@@ -415,6 +478,14 @@ export function Dashboard({
                     </div>
                   </section>
                   {togetherSince && <TogetherCard since={togetherSince} />}
+                  <ReminderStrip
+                    todos={entries.filter((entry) => entry.kind === "Todos")}
+                    busy={busy}
+                    onAdd={() => setEditor({ kind: "Todos" })}
+                    onEdit={(entry) => setEditor({ kind: "Todos", entry })}
+                    onDelete={deleteEntry}
+                    onToggle={toggleEntry}
+                  />
                   <div className="stats">
                     <div>
                       <span>♡</span>
@@ -426,10 +497,7 @@ export function Dashboard({
                     <div>
                       <Flag size={20} />
                       <strong>
-                        {
-                          entries.filter((e) => e.kind === "Goals" && !e.done)
-                            .length
-                        }
+                        {goals.filter((e) => goalProgress(e) < 100).length}
                       </strong>
                       <small>dreams in the making</small>
                     </div>
@@ -452,13 +520,7 @@ export function Dashboard({
                     </Button>
                   </div>
                   <div className="collections-grid">
-                    {kinds
-                      .filter(
-                        (k) =>
-                          k !== "Countdowns" ||
-                          entries.some((e) => e.kind === k),
-                      )
-                      .map((k) => section(k, true))}
+                    {featureKinds.map((k) => section(k, true))}
                   </div>
                   <footer>
                     Built on little things. Held together with love. ♡

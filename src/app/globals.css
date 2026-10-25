@@ -1676,3 +1676,322 @@ input::placeholder {
     font-size: 48px;
   }
 }
+/* Goals & ambitions: a name and the progress we make together. */
+.goals-panel .goal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.goal-item {
+  position: relative;
+  background: #fffdf7;
+  border: 1px solid var(--line);
+  padding: 15px;
+  border-radius: 5px;
+}
+.goal-item h3,
+.handwritten {
+  font:
+    400 22px/1.4 var(--font-schoolbell),
+    cursive;
+  overflow-wrap: anywhere;
+}
+.goal-open {
+  border: 0;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: var(--ink);
+  padding: 0 45px 0 0;
+}
+.goal-open > span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 5px;
+}
+.goal-actions {
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  display: flex;
+}
+.goal-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.goal-detail > h2 {
+  font:
+    400 30px/1.3 var(--font-schoolbell),
+    cursive;
+  overflow-wrap: anywhere;
+}
+.goal-detail form {
+  margin: 0;
+}
+.goal-timeline {
+  list-style: none;
+  padding: 0 0 0 20px;
+  margin: 0;
+  border-left: 1px solid var(--line);
+}
+.goal-timeline li {
+  position: relative;
+  padding: 0 0 24px 8px;
+}
+.goal-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 4px;
+  height: 9px;
+  width: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.goal-timeline li > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.goal-timeline li p {
+  font:
+    400 20px/1.5 var(--font-schoolbell),
+    cursive;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 9px 0;
+}
+.goal-timeline li small {
+  color: var(--muted);
+  font-size: 10px;
+}
+/* Spontaneous reminders live directly on the dashboard. */
+.reminders-section {
+  margin: 24px 0;
+  min-width: 0;
+}
+.reminders-section .section-heading > span {
+  font-size: 10px;
+}
+.reminder-strip {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 12px 2px 9px;
+  scroll-snap-type: x proximity;
+}
+.reminder-strip::-webkit-scrollbar {
+  display: none;
+}
+.reminder-add {
+  flex: 0 0 110px;
+  min-height: 145px;
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  white-space: normal;
+  border-style: dashed;
+  scroll-snap-align: start;
+}
+.reminder-add span {
+  font-size: 11px;
+}
+.reminder-note {
+  flex: 0 0 270px;
+  background: #fff5d8;
+  border: 1px solid #f1e5bf;
+  border-radius: 3px 3px 12px 3px;
+  padding: 14px;
+  scroll-snap-align: start;
+}
+.reminder-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.reminder-top time {
+  flex: 1;
+  font-size: 10px;
+  color: var(--accent);
+}
+.reminder-top > div {
+  display: flex;
+}
+.reminder-note p {
+  font:
+    400 20px/1.4 var(--font-schoolbell),
+    cursive;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.reminder-note small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.reminder-note.is-done p {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+/* Food wishes are a clear list with cuisine icons. */
+.food-simple {
+  background: #fffcfa;
+}
+.food-simple .entry-list {
+  display: block;
+}
+.food-simple .entry {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.food-simple .entry:last-child {
+  border-bottom: 0;
+}
+.food-simple .food-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+.food-simple .entry-main {
+  align-items: flex-start;
+}
+.food-simple .food-location {
+  font-size: 11px;
+}
+.food-simple .entry-detail {
+  font-size: 17px;
+}
+/* A red thumbtack holds every place on its own paper note. */
+.pinned-places {
+  background: var(--hero);
+}
+.pinned-places .entry {
+  margin-top: 8px;
+  padding-top: 24px;
+  border-radius: 2px;
+}
+.pinned-places .entry::before {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffb0a5, #c73734 60%);
+  top: -6px;
+  left: calc(50% - 6px);
+  box-shadow: 2px 3px 3px #44353c33;
+}
+.pinned-places .entry::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 7px;
+  background: #8c3632;
+  top: 5px;
+  left: 50%;
+  transform: rotate(-20deg);
+}
+.pinned-places .entry-copy {
+  background: none;
+  padding-right: 0;
+}
+.pinned-places .entry-copy::before {
+  display: none;
+}
+.pinned-places h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.place-emoji {
+  font-family: Arial, sans-serif;
+  font-size: 30px;
+  flex-shrink: 0;
+}
+.pinned-places.collection-preview .entry {
+  min-height: 90px;
+  align-items: center;
+}
+/* Four calendar slots always have a place for the next occasion. */
+.collections-grid .countdown-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 4px;
+}
+.countdown-slots .entry {
+  min-width: 0;
+  padding: 12px 9px;
+  margin: 0;
+  position: relative;
+  overflow: auto;
+}
+.countdown-slots .entry-actions {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+}
+.countdown-slots .entry-main {
+  width: 100%;
+}
+.countdown-slots .calendar-count {
+  margin: 6px 0 8px;
+  padding: 0 0 6px;
+}
+.countdown-slots .calendar-count strong {
+  font-size: 30px;
+}
+.countdown-slots .calendar-count span {
+  font-size: 8px;
+  letter-spacing: 0.6px;
+}
+.countdown-slots .entry h3 {
+  font-size: 17px;
+}
+.countdown-slots .entry-detail {
+  display: none;
+}
+.countdown-slots .entry-date {
+  font-size: 8px;
+}
+.countdown-slots .countdown-add {
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+  border: 1px dashed var(--line);
+  background: #fffdf966;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--accent);
+  white-space: normal;
+  padding: 10px;
+}
+.countdown-add span {
+  font-size: 10px;
+}
+@media (max-width: 760px) {
+  .reminders-section .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .reminder-note {
+    flex-basis: 245px;
+  }
+  .countdown-slots .calendar-count strong {
+    font-size: 27px;
+  }
+}

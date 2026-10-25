@@ -1,6 +1,6 @@
 # AmiApp ♡
 
-A shared little space for husbands and wives. Responsive Next.js / React frontend, shadcn-style Radix Button, Tailwind CSS, Motion animations, and Supabase Auth + PostgreSQL. Blush, sage, and lavender themes.
+A shared little space for husbands and wives. Responsive Next.js / React frontend, official shadcn/ui components, Tailwind CSS, Motion animations, and Supabase Auth + PostgreSQL. Blush, sage, and lavender themes.
 
 Live app: https://amiapp-afifanshuri2.netlify.app/
 
@@ -12,7 +12,13 @@ Netlify hosts the static Next.js export. Supabase hosts Auth, PostgreSQL, pairin
 
 ## Connect your other Supabase account
 
-Configured project: **Secondary → apopia company → AmiApp**, reference `cxvovxdmhgoyrnfxzkpi`. Schema migrations have been applied. The primary Supabase account was not modified. Public client settings are included in `src/lib/supabase.ts`; `.env.local` can override them.
+Configured project: **Secondary → apopia company → AmiApp**, reference `cxvovxdmhgoyrnfxzkpi`. New local schema changes are not applied automatically; see the pending revision below. The primary Supabase account was not modified. Public client settings are included in `src/lib/supabase.ts`; `.env.local` can override them.
+
+## Pending local feature revision
+
+Not deployed. `supabase/migrations/20261025064718_everyday_feature_updates.sql` is prepared and tested in PGlite, but has not been applied to the hosted database. It adds `entries.due_at`, `entries.emoji`, append-only couple-scoped `goal_updates`, and the transactional `add_goal_update` RPC. New timed reminders, place emoji saves, and goal history require this migration before they can save to Supabase. Apply it only as part of an explicitly approved database release.
+
+The combined Goals & ambitions view includes existing `Goals` and `Ambitions` entries without deleting or rewriting them. Reminders live below Together for, food uses cuisine icons, places use pinned emoji notes, and the dashboard countdown always offers four slots. Dedicated countdown pages retain all records. Preview fixtures are kept outside application routes; no sample data is inserted into Supabase.
 
 1. Sign into your preferred account at https://supabase.com/dashboard and create a **dedicated new project** for AmiApp.
 2. For a fresh project, run all SQL files in `supabase/migrations/` in filename order once. Do not rerun them on the configured AmiApp project. Keep `private`, `vault`, and `net` out of the Data API exposed schemas; expose only `public` for this app. The push webhook URL in the migration and the production CORS/VAPID URL in the Edge Function must be changed for a different project/site. Deploy `supabase/functions/shortnote-push/index.ts` with its handler authentication (`verify_jwt=false` in `supabase/config.toml`). Confirm the project reference before applying anything.
