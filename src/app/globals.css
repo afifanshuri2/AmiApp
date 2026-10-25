@@ -568,7 +568,82 @@ p {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
+}
+.collections-grid > .collection,
+.collections-grid > .shortnotes-notebook {
+  height: 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.collections-grid .object-surface {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.collections-grid .section-heading,
+.collections-grid .section-hint,
+.collections-grid .view-all {
+  flex-shrink: 0;
+}
+.collections-grid .entry-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  padding-top: 12px;
+}
+.collections-grid .empty-state {
+  flex: 1;
+  min-height: 0;
+}
+.collections-grid .notebook-cover {
+  flex: 1;
+  min-height: 0;
+  border: 0;
+  box-shadow: none;
+}
+.collections-grid > .shortnotes-notebook {
+  background: var(--hero);
+  border: 1px solid var(--line);
+  border-radius: 8px 18px 18px 8px;
+}
+.collections-grid .notebook-controls {
+  margin: 0;
+  padding: 6px 12px;
+}
+.collections-grid .notebook-stage {
+  height: 100%;
+}
+.collections-grid .notebook-page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 13px;
+}
+.collections-grid .notebook-heading,
+.collections-grid .notebook-page-label,
+.collections-grid .notebook-page-number,
+.collections-grid .notebook-controls {
+  flex-shrink: 0;
+}
+.collections-grid .notebook-notes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+.collections-grid .notebook-empty {
+  min-height: 100%;
+}
+.collections-grid .notebook-page-number {
+  position: static;
+  padding-top: 10px;
 }
 [data-clickable="true"] {
   cursor: pointer;

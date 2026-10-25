@@ -141,62 +141,64 @@ export function ShortNotesNotebook({
                 </span>
                 <span aria-hidden="true">♡</span>
               </div>
-              {loading && !sorted.length ? (
-                <p className="notebook-empty" role="status">
-                  Gathering your little love notes…
-                </p>
-              ) : sorted.length ? (
-                sorted.slice(page * 3, page * 3 + 3).map((note) => (
-                  <article className="notebook-note" key={note.id}>
-                    <div className="notebook-note-heading">
-                      <h3>{note.title}</h3>
-                      <div className="notebook-note-actions">
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          aria-label={`Edit ${note.title}`}
-                          onClick={() => onEdit(note)}
-                        >
-                          <Pencil size={13} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          disabled={busy}
-                          aria-label={`Delete ${note.title}`}
-                          onClick={() => onDelete(note)}
-                        >
-                          <Trash2 size={13} />
-                        </Button>
+              <div className="notebook-notes">
+                {loading && !sorted.length ? (
+                  <p className="notebook-empty" role="status">
+                    Gathering your little love notes…
+                  </p>
+                ) : sorted.length ? (
+                  sorted.slice(page * 3, page * 3 + 3).map((note) => (
+                    <article className="notebook-note" key={note.id}>
+                      <div className="notebook-note-heading">
+                        <h3>{note.title}</h3>
+                        <div className="notebook-note-actions">
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={`Edit ${note.title}`}
+                            onClick={() => onEdit(note)}
+                          >
+                            <Pencil size={13} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            disabled={busy}
+                            aria-label={`Delete ${note.title}`}
+                            onClick={() => onDelete(note)}
+                          >
+                            <Trash2 size={13} />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    {note.detail && <p>{note.detail}</p>}
-                    <footer>
-                      <span>
-                        with love,{" "}
-                        {note.created_by === profile.id
-                          ? profile.username
-                          : partner.username}{" "}
-                        ♡
-                      </span>
-                      <time dateTime={note.created_at}>
-                        {new Date(note.created_at).toLocaleDateString(
-                          undefined,
-                          { month: "short", day: "numeric" },
-                        )}
-                      </time>
-                    </footer>
-                  </article>
-                ))
-              ) : (
-                <div className="notebook-empty">
-                  <span aria-hidden="true">♡</span>
-                  <p>A fresh page for the two of us.</p>
-                  <Button variant="ghost" onClick={onAdd}>
-                    Write your first note
-                  </Button>
-                </div>
-              )}
+                      {note.detail && <p>{note.detail}</p>}
+                      <footer>
+                        <span>
+                          with love,{" "}
+                          {note.created_by === profile.id
+                            ? profile.username
+                            : partner.username}{" "}
+                          ♡
+                        </span>
+                        <time dateTime={note.created_at}>
+                          {new Date(note.created_at).toLocaleDateString(
+                            undefined,
+                            { month: "short", day: "numeric" },
+                          )}
+                        </time>
+                      </footer>
+                    </article>
+                  ))
+                ) : (
+                  <div className="notebook-empty">
+                    <span aria-hidden="true">♡</span>
+                    <p>A fresh page for the two of us.</p>
+                    <Button variant="ghost" onClick={onAdd}>
+                      Write your first note
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div className="notebook-page-number">— {page + 1} —</div>
             </motion.div>
           </AnimatePresence>
