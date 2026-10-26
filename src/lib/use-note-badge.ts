@@ -11,8 +11,13 @@ export function useNoteBadge(
   const noteIds = visibleNotes.join(",");
   useEffect(() => {
     let active = true;
+    if ("serviceWorker" in navigator)
+      void navigator.serviceWorker
+        .getRegistration("/")
+        .then((registration) => registration?.update())
+        .catch(() => {});
     async function refresh() {
-      if (!supabase) return;
+      if (!supabase || document.visibilityState !== "visible") return;
       if (reading && noteIds) {
         const { error } = await supabase
           .from("note_notifications")
@@ -29,14 +34,23 @@ export function useNoteBadge(
         .is("read_at", null);
       if (!active || error) return;
       setUnread(count || 0);
-      await updateAppBadge(count || 0);
+      const gestures = await supabase
+        .from("partner_gestures")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", userId)
+        .is("read_at", null);
+      if (active) await updateAppBadge((count || 0) + (gestures.count || 0));
     }
     void refresh();
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
     }, 20000);
+    window.addEventListener("ami-gestures-changed", refresh);
+    document.addEventListener("visibilitychange", refresh);
     return () => {
       active = false;
+      window.removeEventListener("ami-gestures-changed", refresh);
+      document.removeEventListener("visibilitychange", refresh);
       window.clearInterval(timer);
     };
   }, [userId, noteIds, reading]);

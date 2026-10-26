@@ -102,3 +102,8 @@ Released source `e14d375` through Netlify deployment `6adf6542955dadbea6a2fb64`.
 The compact avatar bar centers both people with names and moods above their portraits. Click your own avatar to edit. Gesture controls have no backgrounds; received actions and sent confirmations use top toasts only. The sidebar couple badge and global Add a little thing button are removed. Food categories use a visible select with custom values, and restaurant name supplies the title.
 
 Validation: six tests passed, including actual PGlite migration/permissions/isolation checks, and the Webpack production build passed. Live schema grants/checks and the deployed dashboard were verified. The pending avatar-save mismatch is resolved. No Edge Function changes were needed.
+
+
+## Action push notifications release
+
+The user now requests push notifications for partner actions, replacing the earlier toast-only preference. These changes are local until the next release. Apply `20261026144505_gesture_push_notifications.sql`, deploy the updated `shortnote-push` Edge Function, then publish the frontend/service worker. Existing notification subscriptions and Vault credentials are reused; no browser permission is requested automatically. The recipient gets a fixed Poke/Nudge/Kiss alert, and the app badge counts unread gestures plus ShortNotes. Opening an action notification leads to the dashboard, where the existing toast is shown. Reading a gesture clears it from the badge. Sent-confirmation toasts never count as unread. Existing users who have already allowed notifications do not need to subscribe again; iOS delivery still needs a Home Screen installation and OS permission.

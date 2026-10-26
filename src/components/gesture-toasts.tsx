@@ -106,10 +106,13 @@ export function GestureToasts({
     setError("");
     try {
       if (!current.sent) await store.acknowledge(current.id);
-      if (alive.current)
+      if (alive.current) {
         setQueue((previous) =>
           previous.filter((item) => item.id !== current.id),
         );
+        if (!current.sent)
+          window.dispatchEvent(new Event("ami-gestures-changed"));
+      }
     } catch {
       if (alive.current)
         setError("Couldn’t tuck this away. Tap × to try again.");

@@ -15,8 +15,8 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
    create function auth.jwt() returns jsonb language sql stable as $$ select jsonb_build_object('role',current_setting('request.jwt.claim.role',true)) $$;
    grant usage on schema auth to authenticated, anon,service_role; grant execute on function auth.uid(),auth.jwt() to authenticated, anon,service_role;
-   create schema net; create table net.http_request_queue(id bigint);
-   create function net.http_post(url text,body jsonb default '{}',params jsonb default '{}',headers jsonb default '{}',timeout_milliseconds integer default 2000) returns bigint language sql as $$ select 1::bigint $$;
+   create schema net; create table net.http_request_queue(id bigint, body jsonb);
+   create function net.http_post(url text,body jsonb default '{}',params jsonb default '{}',headers jsonb default '{}',timeout_milliseconds integer default 2000) returns bigint language sql as $$ insert into net.http_request_queue values(1,body) returning id $$;
    create schema vault;create table vault.decrypted_secrets(id uuid primary key,decrypted_secret text);
    create function vault.create_secret(secret text,name text) returns uuid language sql as $$ insert into vault.decrypted_secrets values(gen_random_uuid(),secret) returning id $$;`);
     for (const file of readdirSync("supabase/migrations")
@@ -781,6 +781,58 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
             )
           ).rows.length,
           0,
+        );
+      },
+    );
+
+    await check(
+      "gesture pushes queue only the broker-generated action and hide dispatch controls",
+      async () => {
+        await as(
+          3,
+          "insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values($1,'https://web.push.apple.com/partner-b',$2,$3)",
+          [ids[3], "a".repeat(87), "b".repeat(22)],
+        );
+        const id = (
+          await as(2, "select public.send_partner_gesture('kiss') as id")
+        ).rows[0].id;
+        const action = (
+          await as(
+            3,
+            "select recipient_id,kind from public.partner_gestures where id=$1",
+            [id],
+          )
+        ).rows[0];
+        assert.equal(action.recipient_id, ids[3]);
+        assert.equal(action.kind, "kiss");
+        await assert.rejects(
+          as(
+            2,
+            "update public.partner_gestures set dispatched_at=now() where id=$1",
+            [id],
+          ),
+        );
+        await assert.rejects(
+          as(
+            3,
+            "update public.partner_gestures set dispatched_at=now() where id=$1",
+            [id],
+          ),
+        );
+        await db.exec("reset role");
+        const queued = await db.query(
+          "select body from net.http_request_queue where body->>'gestureId'=$1",
+          [id],
+        );
+        assert.equal(queued.rows.length, 1);
+        assert.deepEqual(queued.rows[0].body, { gestureId: id });
+        assert.equal(
+          (
+            await db.query(
+              "select has_function_privilege('authenticated','private.notify_partner_gesture()','EXECUTE') as allowed",
+            )
+          ).rows[0].allowed,
+          false,
         );
       },
     );
