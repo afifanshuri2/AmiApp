@@ -242,6 +242,10 @@ export function CouplePlayground({
       </div>
       <div className="avatar-pair">
         <div className="avatar-person">
+          <strong>{profile.username}</strong>
+          <span className="avatar-caption">
+            {avatarOptions.mood[mine.mood]}
+          </span>
           <Button
             variant="ghost"
             className="avatar-edit"
@@ -250,18 +254,14 @@ export function CouplePlayground({
           >
             <CoupleAvatar config={mine} name={profile.username} />
           </Button>
-          <strong>{profile.username}</strong>
-          <span className="avatar-caption">
-            {avatarOptions.mood[mine.mood]}
-          </span>
         </div>
         <Heart className="avatar-between" size={25} aria-hidden="true" />
         <div className="avatar-person">
-          <CoupleAvatar config={theirs} name={partner.username} />
           <strong>{partner.username}</strong>
           <span className="avatar-caption">
             {avatarOptions.mood[theirs.mood]}
           </span>
+          <CoupleAvatar config={theirs} name={partner.username} />
         </div>
       </div>
       <div

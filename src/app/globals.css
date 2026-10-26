@@ -2292,10 +2292,9 @@ input::placeholder {
   min-width: 0;
 }
 .avatar-person {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  grid-template-rows: auto auto auto;
-  column-gap: 8px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
   width: auto;
   flex: 0 1 auto;
   max-width: calc((100% - 44px) / 2);
@@ -2303,7 +2302,7 @@ input::placeholder {
 }
 .avatar-person .couple-avatar {
   width: 64px;
-  grid-row: 1 / 4;
+  grid-row: auto;
 }
 .avatar-person strong {
   font-size: 19px;
@@ -2372,7 +2371,7 @@ input::placeholder {
 
 /* Avatars are the edit affordance; gestures stay light and unboxed. */
 .avatar-person > .avatar-edit[data-slot="button"] {
-  grid-row: 1 / 4;
+  grid-row: auto;
   width: 64px;
   height: 72px;
   min-height: 72px;
