@@ -95,10 +95,10 @@ Live checks also passed against the configured project: real Auth signup/session
 `src/components/auth.tsx` and `pair.tsx` own onboarding. `dashboard.tsx` renders reusable collections. `entry-editor.tsx` is the shared form. `ui/button.tsx` uses the shadcn/ui Radix/CVA composition pattern. `src/lib` holds shared types and the singleton Supabase client. The SQL migration is the authoritative data/security layer. No service credentials or business authorization live in React.
 
 
-## Pending local changes (October 26, 2026)
+## October 26 production release
 
-Not deployed. Expanded avatar styles add four hijab options, bucket hat/beret/songkok, oval/cat-eye/sunglasses, eye/nose/facial-hair styles, and seven moods. The dashboard avatar section is a compact bar, and foreground-only gesture toasts appear at the top. The Food to try editor uses a visible category select with custom categories; restaurant name supplies the entry title, and older food entries display their existing restaurant name without rewriting their data.
+Released source `e14d375` through Netlify deployment `6adf6542955dadbea6a2fb64`. Applied `20261026133652_expanded_avatar_styles.sql` to Secondary / AmiApp. Sport hijab, additional headwear/glasses, eye/nose/facial-hair styles, and moods are now supported by the hosted database. Ownership policies remain in place.
 
-Before releasing, apply `20261026133652_expanded_avatar_styles.sql` to Secondary / AmiApp, then publish the new frontend. The migration adds bounded avatar fields and expands choices while retaining existing values and ownership policies. Until it is applied, the new avatar fields cannot be saved against the hosted database. Preview checks use an isolated in-memory store; no real couple data was changed.
+The compact avatar bar centers both people with names and moods above their portraits. Click your own avatar to edit. Gesture controls have no backgrounds; received actions and sent confirmations use top toasts only. The sidebar couple badge and global Add a little thing button are removed. Food categories use a visible select with custom values, and restaurant name supplies the title.
 
-The local avatar bar now opens editing by clicking your own avatar. Gesture controls use icons and labels without a background. Successful sends join the top toast queue and do not acknowledge incoming partner gestures. No confirmation text remains inside the bar.
+Validation: six tests passed, including actual PGlite migration/permissions/isolation checks, and the Webpack production build passed. Live schema grants/checks and the deployed dashboard were verified. The pending avatar-save mismatch is resolved. No Edge Function changes were needed.
