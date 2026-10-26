@@ -10,7 +10,6 @@ import {
   ShoppingBasket,
   MapPin,
   Hourglass,
-  Plus,
   ArrowUpRight,
   LogOut,
   Check,
@@ -303,15 +302,6 @@ export function Dashboard({
         <a className="wordmark" href="#" onClick={() => setView("Dashboard")}>
           <Logo />
         </a>
-        <div className="couple-badge">
-          <span aria-hidden="true">♡</span>
-          <div>
-            <strong>
-              {profile.username} & {partner.username}
-            </strong>
-            <small>Better, together.</small>
-          </div>
-        </div>
         <nav aria-label="Main navigation">
           <button
             className={view === "Dashboard" ? "active" : ""}
@@ -406,18 +396,6 @@ export function Dashboard({
                     : hints[view]}
               </p>
             </div>
-            {view !== "Settings" && (
-              <Button
-                onClick={() =>
-                  setEditor({
-                    kind: view === "Dashboard" ? "ShortNotes" : view,
-                  })
-                }
-              >
-                <Plus size={17} />
-                Add a little thing
-              </Button>
-            )}
           </div>
           {error && (
             <p className="error" role="alert">
