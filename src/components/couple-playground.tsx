@@ -27,6 +27,10 @@ const fieldLabels: Record<keyof AvatarConfig, string> = {
   headwear: "Headwear",
   glasses: "Glasses",
   outfit: "Outfit color",
+  eyes: "Eye style",
+  nose: "Nose",
+  facial_hair: "Facial hair",
+  mood: "Mood",
 };
 function AvatarEditor({
   initial,
@@ -233,15 +237,16 @@ export function CouplePlayground({
     theirs = avatarConfig(avatars.find((a) => a.user_id === partner.id));
   return (
     <section className="couple-playground" aria-label="Our little world">
-      <div className="playground-heading">
-        <span className="pill">♡ JUST THE TWO OF US</span>
-        <h2>Our little world</h2>
-        <p>A tiny hello, just for your person.</p>
+      <div className="sr-only">
+        <h2>Our little world ♡</h2>
       </div>
       <div className="avatar-pair">
         <div className="avatar-person">
           <CoupleAvatar config={mine} name={profile.username} />
           <strong>{profile.username}</strong>
+          <span className="avatar-caption">
+            {avatarOptions.mood[mine.mood]}
+          </span>
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             <Pencil size={12} />
             My avatar
@@ -251,7 +256,9 @@ export function CouplePlayground({
         <div className="avatar-person">
           <CoupleAvatar config={theirs} name={partner.username} />
           <strong>{partner.username}</strong>
-          <span className="avatar-caption">your favorite person</span>
+          <span className="avatar-caption">
+            {avatarOptions.mood[theirs.mood]}
+          </span>
         </div>
       </div>
       <div
@@ -270,12 +277,11 @@ export function CouplePlayground({
           </Button>
         ))}
       </div>
-      <p className="gesture-status" role="status">
-        {message ||
-          (cooldown
-            ? "Let that little love land ♡"
-            : "A little tap can make their day.")}
-      </p>
+      {(message || cooldown) && (
+        <p className="gesture-status" role="status">
+          {message || "Let that little love land ♡"}
+        </p>
+      )}
       {error && (
         <div className="playground-error" role="status">
           <span>{error}</span>

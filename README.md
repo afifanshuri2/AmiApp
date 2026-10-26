@@ -93,3 +93,10 @@ Live checks also passed against the configured project: real Auth signup/session
 ## Structure
 
 `src/components/auth.tsx` and `pair.tsx` own onboarding. `dashboard.tsx` renders reusable collections. `entry-editor.tsx` is the shared form. `ui/button.tsx` uses the shadcn/ui Radix/CVA composition pattern. `src/lib` holds shared types and the singleton Supabase client. The SQL migration is the authoritative data/security layer. No service credentials or business authorization live in React.
+
+
+## Pending local changes (October 26, 2026)
+
+Not deployed. Expanded avatar styles add four hijab options, bucket hat/beret/songkok, oval/cat-eye/sunglasses, eye/nose/facial-hair styles, and seven moods. The dashboard avatar section is a compact bar, and foreground-only gesture toasts appear at the top. The Food to try editor uses a visible category select with custom categories; restaurant name supplies the entry title, and older food entries display their existing restaurant name without rewriting their data.
+
+Before releasing, apply `20261026133652_expanded_avatar_styles.sql` to Secondary / AmiApp, then publish the new frontend. The migration adds bounded avatar fields and expands choices while retaining existing values and ownership policies. Until it is applied, the new avatar fields cannot be saved against the hosted database. Preview checks use an isolated in-memory store; no real couple data was changed.

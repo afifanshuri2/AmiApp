@@ -178,14 +178,12 @@ export function EntryCollection({
                         {e.emoji || "📍"}
                       </span>
                     )}
-                    {e.title}
+                    {kind === "FoodToTry" ? e.place_name || e.title : e.title}
                   </h3>
                   {kind === "FoodToTry" && (
                     <div className="food-meta">
                       <p className="food-location">
                         <MapPin size={13} aria-hidden="true" />
-                        {e.place_name}
-                        {e.place_name && e.location ? " · " : ""}
                         {e.location}
                       </p>
                     </div>

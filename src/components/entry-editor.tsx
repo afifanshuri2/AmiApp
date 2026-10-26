@@ -1,8 +1,9 @@
 "use client";
+import { useState } from "react";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
-import { NativeSelectOption } from "./ui/native-select";
+import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { X } from "lucide-react";
 import { Button } from "./ui/button";
@@ -35,6 +36,11 @@ export function EntryEditor({
   save: (data: EntryInput) => Promise<void>;
   close: () => void;
 }) {
+  const [foodCategory, setFoodCategory] = useState(
+    entry?.category && !foodCategories.includes(entry.category)
+      ? "custom"
+      : entry?.category || foodCategories[0],
+  );
   return (
     <Dialog
       open
@@ -77,7 +83,11 @@ export function EntryEditor({
           onSubmit={async (e) => {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
-            const category = String(form.get("category") || "").trim();
+            const category = String(
+              form.get(
+                foodCategory === "custom" ? "custom_category" : "category",
+              ) || "",
+            ).trim();
             const detail = String(form.get("detail") || "").trim();
             const dateTime = String(form.get("due_at") || "");
             const emoji = String(form.get("emoji") || "📍").trim();
@@ -93,7 +103,9 @@ export function EntryEditor({
               title:
                 kind === "Todos"
                   ? Array.from(detail).slice(0, 160).join("")
-                  : String(form.get("title")).trim(),
+                  : kind === "FoodToTry"
+                    ? String(form.get("place_name") || "").trim()
+                    : String(form.get("title")).trim(),
               detail,
               due_date:
                 kind === "Todos"
@@ -113,15 +125,13 @@ export function EntryEditor({
             });
           }}
         >
-          {kind !== "Todos" && (
+          {kind !== "Todos" && kind !== "FoodToTry" && (
             <Label>
-              {kind === "FoodToTry"
-                ? "Food or dish to try"
-                : kind === "Places"
-                  ? "Place name"
-                  : kind === "Ambitions"
-                    ? "Goal or ambition"
-                    : "Title"}
+              {kind === "Places"
+                ? "Place name"
+                : kind === "Ambitions"
+                  ? "Goal or ambition"
+                  : "Title"}
               <Input
                 name="title"
                 defaultValue={entry?.title}
@@ -162,25 +172,39 @@ export function EntryEditor({
             <>
               <Label>
                 Category
-                <Input
+                <NativeSelect
                   name="category"
-                  list="food-categories"
-                  maxLength={40}
-                  defaultValue={entry?.category || ""}
-                  placeholder="Choose or type a category"
+                  value={foodCategory}
+                  onChange={(event) => setFoodCategory(event.target.value)}
                   required
-                />
-                <datalist id="food-categories">
+                >
                   {foodCategories.map((category) => (
-                    <NativeSelectOption key={category} value={category} />
+                    <NativeSelectOption key={category} value={category}>
+                      {category}
+                    </NativeSelectOption>
                   ))}
-                </datalist>
+                  <NativeSelectOption value="custom">
+                    Custom category…
+                  </NativeSelectOption>
+                </NativeSelect>
               </Label>
+              {foodCategory === "custom" && (
+                <Label>
+                  Custom category
+                  <Input
+                    name="custom_category"
+                    defaultValue={entry?.category || ""}
+                    maxLength={40}
+                    required
+                    placeholder="e.g. Melayu"
+                  />
+                </Label>
+              )}
               <Label>
-                Place / restaurant name
+                Restaurant name
                 <Input
                   name="place_name"
-                  defaultValue={entry?.place_name || ""}
+                  defaultValue={entry?.place_name || entry?.title || ""}
                   maxLength={160}
                   required
                   placeholder="Where should we try it?"

@@ -2222,7 +2222,7 @@ input::placeholder {
 /* Incoming gestures are temporary foreground toasts, never dashboard cards. */
 .gesture-toast-region {
   position: fixed;
-  bottom: max(22px, env(safe-area-inset-bottom));
+  top: max(18px, env(safe-area-inset-top));
   right: 22px;
   width: min(420px, calc(100vw - 32px));
   z-index: 60;
@@ -2271,5 +2271,100 @@ input::placeholder {
   }
   .gesture-toast h3 {
     font-size: 21px;
+  }
+}
+
+/* A compact shared avatar bar, with room for all three gestures. */
+.couple-playground {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 18px;
+  padding: 12px 18px;
+  border-radius: 18px;
+  text-align: left;
+}
+.avatar-pair {
+  justify-content: flex-start;
+  gap: 14px;
+  margin: 0;
+  min-width: 0;
+}
+.avatar-person {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: 8px;
+  width: auto;
+  flex: 1;
+  align-items: center;
+}
+.avatar-person .couple-avatar {
+  width: 64px;
+  grid-row: 1 / 4;
+}
+.avatar-person strong {
+  font-size: 19px;
+  margin: 0;
+}
+.avatar-person > button {
+  font-size: 10px;
+  min-height: 24px;
+  height: 24px;
+  padding: 0;
+  justify-content: flex-start;
+  margin: 0;
+}
+.avatar-caption {
+  min-height: 16px;
+  font-size: 10px;
+  margin: 0;
+}
+.avatar-between {
+  width: 16px;
+}
+.gesture-actions {
+  gap: 6px;
+}
+.gesture-actions button {
+  min-width: 0;
+}
+.couple-playground .gesture-status,
+.couple-playground .playground-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  min-height: 0;
+  padding: 4px 0;
+  font-size: 11px;
+}
+.entry-dialog [data-slot="native-select-wrapper"] {
+  width: 100%;
+}
+.entry-dialog [data-slot="native-select"] {
+  height: 44px;
+  padding: 8px 32px 8px 12px;
+  line-height: 20px;
+}
+.avatar-editor-preview {
+  position: sticky;
+  top: -28px;
+  background: var(--paper);
+  z-index: 1;
+}
+@media (max-width: 1050px) {
+  .couple-playground {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+  .avatar-pair {
+    gap: 10px;
+  }
+  .gesture-actions {
+    justify-content: stretch;
+  }
+  .gesture-actions button {
+    flex: 1;
   }
 }

@@ -725,6 +725,65 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
         );
       },
     );
+
+    await check(
+      "expanded avatar choices keep ownership and reject invalid moods",
+      async () => {
+        for (const headwear of [
+          "hijab",
+          "hijab_wrap",
+          "hijab_instant",
+          "hijab_sport",
+          "bucket",
+          "beret",
+          "songkok",
+        ]) {
+          await as(
+            0,
+            "update public.avatars set headwear=$1,glasses='cat_eye',eyes='lashes',nose='button',facial_hair='goatee',mood='sad' where user_id=$2",
+            [headwear, ids[0]],
+          );
+          assert.equal(
+            (
+              await as(
+                1,
+                "select headwear,mood from public.avatars where user_id=$1",
+                [ids[0]],
+              )
+            ).rows[0].headwear,
+            headwear,
+          );
+        }
+        for (const mood of [
+          "happy",
+          "neutral",
+          "angry",
+          "sad",
+          "sleepy",
+          "love",
+          "surprised",
+        ])
+          await as(0, "update public.avatars set mood=$1 where user_id=$2", [
+            mood,
+            ids[0],
+          ]);
+        await assert.rejects(
+          as(0, "update public.avatars set mood='invalid' where user_id=$1", [
+            ids[0],
+          ]),
+        );
+        assert.equal(
+          (
+            await as(
+              1,
+              "update public.avatars set mood='angry' where user_id=$1 returning user_id",
+              [ids[0]],
+            )
+          ).rows.length,
+          0,
+        );
+      },
+    );
   } finally {
     await db.close();
   }

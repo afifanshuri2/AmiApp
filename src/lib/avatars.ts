@@ -20,8 +20,43 @@ export const avatarOptions = {
     honey: "Honey",
     silver: "Silver",
   },
-  headwear: { none: "None", cap: "Cap", beanie: "Beanie", hijab: "Hijab" },
-  glasses: { none: "None", round: "Round", square: "Square" },
+  headwear: {
+    none: "None",
+    cap: "Cap",
+    beanie: "Beanie",
+    bucket: "Bucket hat",
+    beret: "Beret",
+    songkok: "Songkok",
+    hijab: "Classic hijab",
+    hijab_wrap: "Wrapped shawl",
+    hijab_instant: "Instant hijab",
+    hijab_sport: "Sport hijab",
+  },
+  glasses: {
+    none: "None",
+    round: "Round",
+    square: "Square",
+    oval: "Oval",
+    cat_eye: "Cat-eye",
+    sunglasses: "Sunglasses",
+  },
+  eyes: { dot: "Dot eyes", almond: "Almond eyes", lashes: "Lashes" },
+  nose: { none: "None", button: "Button", pointed: "Pointed" },
+  facial_hair: {
+    none: "None",
+    moustache: "Moustache",
+    beard: "Beard",
+    goatee: "Goatee",
+  },
+  mood: {
+    happy: "Happy",
+    neutral: "Calm",
+    angry: "Angry",
+    sad: "Sad",
+    sleepy: "Sleepy",
+    love: "In love",
+    surprised: "Surprised",
+  },
   outfit: { rose: "Rose", sage: "Sage", lavender: "Lavender", blue: "Blue" },
 } as const;
 export type AvatarConfig = {
@@ -35,6 +70,10 @@ export const defaultAvatar: AvatarConfig = {
   headwear: "none",
   glasses: "none",
   outfit: "sage",
+  eyes: "dot",
+  nose: "none",
+  facial_hair: "none",
+  mood: "happy",
 };
 export function avatarConfig(record?: Partial<AvatarConfig>): AvatarConfig {
   return Object.fromEntries(
