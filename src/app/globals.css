@@ -2369,3 +2369,26 @@ input::placeholder {
     flex: 1;
   }
 }
+
+/* Avatars are the edit affordance; gestures stay light and unboxed. */
+.avatar-person > .avatar-edit[data-slot="button"] {
+  grid-row: 1 / 4;
+  width: 64px;
+  height: 72px;
+  min-height: 72px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 16px;
+}
+.gesture-actions [data-slot="button"] {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.gesture-actions [data-slot="button"]:hover {
+  color: var(--accent);
+  background: transparent;
+}

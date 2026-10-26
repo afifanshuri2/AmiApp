@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Heart, Pencil, RefreshCw, X } from "lucide-react";
+import { Heart, RefreshCw, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
@@ -154,7 +154,6 @@ export function CouplePlayground({
   const [editing, setEditing] = useState(false),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
-    [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
     [cooldown, setCooldown] = useState(false);
   const mounted = useRef(false),
@@ -212,12 +211,13 @@ export function CouplePlayground({
     sending.current = true;
     setBusy(true);
     setError("");
-    setMessage("");
     try {
       await store.send(kind);
       if (mounted.current) {
-        setMessage(
-          `${gestures[kind].emoji} ${gestures[kind].label} sent to ${partner.username}. A little love is on its way!`,
+        window.dispatchEvent(
+          new CustomEvent("ami-gesture-sent", {
+            detail: { userId: profile.id, kind },
+          }),
         );
         setCooldown(true);
       }
@@ -242,15 +242,18 @@ export function CouplePlayground({
       </div>
       <div className="avatar-pair">
         <div className="avatar-person">
-          <CoupleAvatar config={mine} name={profile.username} />
+          <Button
+            variant="ghost"
+            className="avatar-edit"
+            aria-label="Edit my avatar"
+            onClick={() => setEditing(true)}
+          >
+            <CoupleAvatar config={mine} name={profile.username} />
+          </Button>
           <strong>{profile.username}</strong>
           <span className="avatar-caption">
             {avatarOptions.mood[mine.mood]}
           </span>
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-            <Pencil size={12} />
-            My avatar
-          </Button>
         </div>
         <Heart className="avatar-between" size={25} aria-hidden="true" />
         <div className="avatar-person">
@@ -268,7 +271,7 @@ export function CouplePlayground({
         {(Object.keys(gestures) as GestureKind[]).map((kind) => (
           <Button
             key={kind}
-            variant="outline"
+            variant="ghost"
             disabled={!ready || busy || cooldown}
             onClick={() => void send(kind)}
           >
@@ -277,11 +280,6 @@ export function CouplePlayground({
           </Button>
         ))}
       </div>
-      {(message || cooldown) && (
-        <p className="gesture-status" role="status">
-          {message || "Let that little love land ♡"}
-        </p>
-      )}
       {error && (
         <div className="playground-error" role="status">
           <span>{error}</span>

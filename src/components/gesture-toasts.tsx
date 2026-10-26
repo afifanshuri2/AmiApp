@@ -21,7 +21,9 @@ export function GestureToasts({
   theme: string;
   store?: CoupleInteractionStore;
 }) {
-  const [queue, setQueue] = useState<PartnerGesture[]>([]),
+  const [queue, setQueue] = useState<(PartnerGesture & { sent?: boolean })[]>(
+      [],
+    ),
     [visible, setVisible] = useState(false),
     [paused, setPaused] = useState(false),
     [busy, setBusy] = useState(false),
@@ -62,6 +64,26 @@ export function GestureToasts({
         fetching = false;
       }
     }
+    function sent(event: Event) {
+      const detail = (event as CustomEvent).detail;
+      if (
+        detail?.userId !== profile.id ||
+        !Object.hasOwn(gestures, detail?.kind)
+      )
+        return;
+      setQueue((previous) => [
+        ...previous,
+        {
+          id: crypto.randomUUID(),
+          sender_id: profile.id,
+          recipient_id: partner.id,
+          kind: detail.kind,
+          created_at: new Date().toISOString(),
+          sent: true,
+        },
+      ]);
+    }
+    window.addEventListener("ami-gesture-sent", sent);
     void refresh();
     const timer = window.setInterval(() => {
       void refresh();
@@ -69,6 +91,7 @@ export function GestureToasts({
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
     return () => {
+      window.removeEventListener("ami-gesture-sent", sent);
       active = false;
       alive.current = false;
       window.clearInterval(timer);
@@ -82,7 +105,7 @@ export function GestureToasts({
     setBusy(true);
     setError("");
     try {
-      await store.acknowledge(current.id);
+      if (!current.sent) await store.acknowledge(current.id);
       if (alive.current)
         setQueue((previous) =>
           previous.filter((item) => item.id !== current.id),
@@ -136,9 +159,15 @@ export function GestureToasts({
               {gestures[current.kind].emoji}
             </span>
             <div className="gesture-toast-copy">
-              <h3>{gestures[current.kind].received}</h3>
+              <h3>
+                {current.sent
+                  ? `${gestures[current.kind].label} sent to ${partner.username}`
+                  : gestures[current.kind].received}
+              </h3>
               <p>
-                From {partner.username} ♡ {gestures[current.kind].detail}
+                {current.sent
+                  ? "A little love is on its way!"
+                  : `From ${partner.username} ♡ ${gestures[current.kind].detail}`}
               </p>
               {queue.length > 1 && (
                 <small>{queue.length - 1} more little hellos waiting</small>
