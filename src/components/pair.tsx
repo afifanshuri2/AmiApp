@@ -45,7 +45,6 @@ export function Pair({
   return (
     <main className="pair-shell">
       <div className="mini-heart">♡</div>
-      <p className="eyebrow">TWO HEARTS, ONE LITTLE SPACE</p>
       <h1>Find your {profile.role === "husband" ? "wife" : "husband"}.</h1>
       <p className="muted">
         Share a key or enter theirs. Your story opens when you’re both here.

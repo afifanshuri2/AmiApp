@@ -45,7 +45,6 @@ export function RelationshipForm({
   }
   return (
     <Card className="card relationship-form">
-      <p className="eyebrow">OUR STORY</p>
       <h2>
         {onboarding ? "When did your story begin?" : "Relationship settings"}
       </h2>

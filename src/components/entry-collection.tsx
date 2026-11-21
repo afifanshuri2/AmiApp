@@ -1,34 +1,42 @@
 "use client";
 import { useId } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Check,
-  MapPin,
-  ArrowUpRight,
-  type LucideIcon,
-} from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { itemMotion } from "./motion-presets";
+import { Check, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { Label } from "./ui/label";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
 import { Button } from "./ui/button";
-import { EverydayCard } from "./everyday-card";
+import { kindMeta } from "./kind-meta";
 import { foodCategories, type Entry, type Kind } from "../lib/types";
 import { foodIcon } from "../lib/everyday";
+import { displayGrocery } from "../lib/groceries";
+
+const addText: Partial<Record<Kind, string>> = {
+  Groceries: "Add a grocery item",
+  Places: "Add a place",
+  FoodToTry: "Add a food to try",
+  Countdowns: "Add a countdown",
+  Todos: "Add a to-do",
+};
+const toggles: Kind[] = ["Groceries", "FoodToTry", "Todos", "Goals"];
+
+function daysLeft(date: string) {
+  const target = new Date(date + "T00:00:00"),
+    today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.max(
+    0,
+    Math.round((target.getTime() - today.getTime()) / 86400000),
+  );
+}
 
 export function EntryCollection({
   kind,
   entries,
-  label,
-  hint,
-  Icon,
-  compact = false,
   loading,
   busy,
   foodCategory = "",
   setFoodCategory,
-  onOpen,
   onAdd,
   onEdit,
   onDelete,
@@ -36,15 +44,10 @@ export function EntryCollection({
 }: {
   kind: Exclude<Kind, "ShortNotes">;
   entries: Entry[];
-  label: string;
-  hint: string;
-  Icon: LucideIcon;
-  compact?: boolean;
   loading: boolean;
   busy: boolean;
   foodCategory?: string;
   setFoodCategory: (category: string) => void;
-  onOpen: () => void;
   onAdd: () => void;
   onEdit: (entry: Entry) => void;
   onDelete: (entry: Entry) => void;
@@ -52,43 +55,33 @@ export function EntryCollection({
 }) {
   const reduced = useReducedMotion();
   const filterId = useId();
-  const list = entries.filter(
-    (e) =>
-      e.kind === kind &&
-      (kind !== "FoodToTry" ||
-        compact ||
-        !foodCategory ||
-        e.category === foodCategory),
-  );
-  if (compact && kind === "Groceries")
-    list.sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const slotGrid = compact && (kind === "Countdowns" || kind === "Places");
-  const previewLimit = slotGrid ? 4 : kind === "Groceries" ? 1 : 3;
-  const slotLabel = kind === "Places" ? "Add place" : "Add countdown";
+  const { label, Icon, tone } = kindMeta[kind];
+  const all = entries.filter((e) => e.kind === kind);
+  const list =
+    kind === "FoodToTry" && foodCategory
+      ? all.filter((e) => e.category === foodCategory)
+      : all;
+  const sorted =
+    kind === "Countdowns"
+      ? [...list].sort((a, b) =>
+          (a.due_date || "").localeCompare(b.due_date || ""),
+        )
+      : list;
+  const categories =
+    kind === "FoodToTry"
+      ? Array.from(new Set([...foodCategories, ...all.map((e) => e.category)]))
+          .filter(Boolean)
+          .sort()
+      : [];
   return (
-    <EverydayCard
-      kind={kind}
-      className={`${kind === "FoodToTry" ? "food-simple" : ""} ${kind === "Places" ? "pinned-places" : ""} ${compact ? "collection-preview" : ""}`}
-      key={kind}
-      aria-label={compact ? `Open ${label}` : undefined}
-      onOpen={compact ? onOpen : undefined}
-    >
-      <div className="section-heading">
-        <h2>
-          <Icon size={18} />
-          {label}
-        </h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Add ${label}`}
-          onClick={onAdd}
-        >
-          <Plus size={19} />
-        </Button>
-      </div>
-      <p className="muted section-hint">{hint}</p>
-      {kind === "FoodToTry" && !compact && (
+    <section className={`collection kind-${kind}`} aria-label={label}>
+      <button type="button" className="add-row" onClick={onAdd}>
+        <span className={`chip k${tone}`}>
+          <Plus size={20} aria-hidden="true" />
+        </span>
+        {addText[kind] || `Add ${label.toLowerCase()}`}
+      </button>
+      {kind === "FoodToTry" && (
         <div className="food-filter">
           <Label htmlFor={filterId}>Filter by category</Label>
           <NativeSelect
@@ -97,54 +90,48 @@ export function EntryCollection({
             onChange={(e) => setFoodCategory(e.target.value)}
           >
             <NativeSelectOption value="">All categories</NativeSelectOption>
-            {Array.from(
-              new Set([
-                ...foodCategories,
-                ...entries
-                  .filter((e) => e.kind === "FoodToTry")
-                  .map((e) => e.category),
-              ]),
-            )
-              .sort()
-              .map((category) => (
-                <NativeSelectOption key={category}>
-                  {category}
-                </NativeSelectOption>
-              ))}
+            {categories.map((category) => (
+              <NativeSelectOption key={category}>{category}</NativeSelectOption>
+            ))}
           </NativeSelect>
         </div>
       )}
-      {list.length || slotGrid ? (
-        <div
-          className={`entry-list ${slotGrid ? `feature-slots ${kind === "Places" ? "place-slots" : "countdown-slots"}` : ""}`}
-        >
-          {(compact ? list.slice(0, previewLimit) : list).map((e) => (
-            <article key={e.id} className={`entry ${e.done ? "is-done" : ""}`}>
-              <div className="entry-main">
-                {!["ShortNotes", "Countdowns", "Ambitions"].includes(kind) &&
-                  !(kind === "Places" && compact) && (
-                    <button
-                      disabled={busy}
-                      className="checkbox"
-                      aria-label={`${e.done ? "Mark incomplete" : "Complete"}: ${e.title}`}
-                      aria-pressed={e.done}
-                      onClick={() => onToggle(e)}
-                    >
-                      {e.done && (
-                        <motion.span
-                          className="completion-tick"
-                          initial={reduced ? false : { scale: 0.6, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ duration: 0.18 }}
-                        >
-                          <Check size={13} />
-                        </motion.span>
-                      )}
-                    </button>
-                  )}
+      {sorted.length ? (
+        <div className="entry-list">
+          <AnimatePresence initial={false} mode="popLayout">
+            {sorted.map((e) => (
+              <motion.article
+                key={e.id}
+                className={`entry ${e.done ? "is-done" : ""}`}
+                {...itemMotion}
+              >
+                {toggles.includes(kind) && (
+                  <button
+                    disabled={busy}
+                    className="checkbox"
+                    aria-label={`${e.done ? "Mark incomplete" : "Complete"}: ${e.title}`}
+                    aria-pressed={e.done}
+                    onClick={() => onToggle(e)}
+                  >
+                    {e.done && (
+                      <motion.span
+                        className="completion-tick"
+                        initial={reduced ? false : { scale: 0, rotate: -40 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 18,
+                        }}
+                      >
+                        <Check size={14} />
+                      </motion.span>
+                    )}
+                  </button>
+                )}
                 {kind === "FoodToTry" && (
                   <span
-                    className="food-icon"
+                    className="entry-emoji"
                     role="img"
                     aria-label={e.category}
                     title={e.category}
@@ -152,66 +139,43 @@ export function EntryCollection({
                     {foodIcon(e.category)}
                   </span>
                 )}
+                {kind === "Places" && (
+                  <span className="entry-emoji" role="img" aria-label="Place">
+                    {e.emoji || "📍"}
+                  </span>
+                )}
+                {kind === "Countdowns" && e.due_date && (
+                  <div className="count-badge" aria-label="Days to go">
+                    <strong>{daysLeft(e.due_date)}</strong>
+                    <span>days</span>
+                  </div>
+                )}
                 <div className="entry-copy">
-                  {kind === "Countdowns" && e.due_date && (
-                    <div className="calendar-count" aria-label="Days remaining">
-                      <strong>
-                        {Math.max(
-                          0,
-                          Math.ceil(
-                            (Date.parse(e.due_date + "T00:00:00") -
-                              Date.now()) /
-                              86400000,
-                          ),
-                        )}
-                      </strong>
-                      <span>days to go</span>
-                    </div>
-                  )}
                   <h3>
-                    {kind === "Places" && (
-                      <span
-                        className="place-emoji"
-                        role="img"
-                        aria-label="Place emoji"
-                      >
-                        {e.emoji || "📍"}
-                      </span>
-                    )}
                     {kind === "FoodToTry" ? e.place_name || e.title : e.title}
                   </h3>
-                  {kind === "FoodToTry" && (
-                    <div className="food-meta">
-                      <p className="food-location">
-                        <MapPin size={13} aria-hidden="true" />
-                        {e.location}
-                      </p>
-                    </div>
+                  {kind === "FoodToTry" && e.location && (
+                    <p className="entry-meta">
+                      <MapPin size={13} aria-hidden="true" />
+                      {e.location}
+                    </p>
                   )}
-                  {e.detail && !(kind === "Places" && compact) && (
-                    <p className="entry-detail">{e.detail}</p>
+                  {e.detail && (
+                    <p className="entry-detail">
+                      {kind === "Groceries"
+                        ? displayGrocery(e.detail)
+                        : e.detail}
+                    </p>
                   )}
-                  {e.due_date && (
-                    <p className="entry-date">
+                  {e.due_date && kind !== "Todos" && (
+                    <p className="entry-meta">
                       {new Date(e.due_date + "T00:00:00").toLocaleDateString(
                         undefined,
                         { month: "short", day: "numeric", year: "numeric" },
                       )}
                     </p>
                   )}
-                  {kind === "Ambitions" && (
-                    <div className="progress-row">
-                      <progress
-                        max={100}
-                        value={e.progress}
-                        aria-label={`${e.title} progress`}
-                      />
-                      <span>{e.progress}%</span>
-                    </div>
-                  )}
                 </div>
-              </div>
-              {!(kind === "Places" && compact) && (
                 <div className="entry-actions">
                   <Button
                     variant="ghost"
@@ -219,7 +183,7 @@ export function EntryCollection({
                     aria-label={`Edit ${e.title}`}
                     onClick={() => onEdit(e)}
                   >
-                    <Pencil size={14} />
+                    <Pencil size={16} />
                   </Button>
                   <Button
                     variant="ghost"
@@ -228,40 +192,25 @@ export function EntryCollection({
                     aria-label={`Delete ${e.title}`}
                     onClick={() => onDelete(e)}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={16} />
                   </Button>
                 </div>
-              )}
-            </article>
-          ))}
-          {slotGrid &&
-            Array.from({ length: Math.max(0, 4 - list.length) }, (_, index) => (
-              <Button
-                variant="ghost"
-                className="slot-add"
-                key={`empty-${index}`}
-                aria-label={slotLabel}
-                onClick={onAdd}
-              >
-                <Plus size={25} />
-                <span>{slotLabel}</span>
-              </Button>
+              </motion.article>
             ))}
+          </AnimatePresence>
         </div>
       ) : (
-        <button className="empty-state" onClick={onAdd}>
-          <span>♡</span>
+        <div className="empty-state" role="status">
+          <span className={`chip k${tone}`}>
+            <Icon size={22} aria-hidden="true" />
+          </span>
           {loading
-            ? "Gathering your little things…"
-            : "Your first little thing belongs here."}
-          <small>{loading ? "One moment" : "+ Add something together"}</small>
-        </button>
+            ? "Loading…"
+            : foodCategory
+              ? "Nothing in this category yet."
+              : "Nothing here yet. Add the first one."}
+        </div>
       )}
-      {compact && list.length > previewLimit && (
-        <button className="text-link view-all" onClick={onOpen}>
-          See all {list.length} <ArrowUpRight size={14} />
-        </button>
-      )}
-    </EverydayCard>
+    </section>
   );
 }

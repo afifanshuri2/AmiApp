@@ -13,12 +13,10 @@ import type { Profile } from "../lib/types";
 export function GestureToasts({
   profile,
   partner,
-  theme,
   store = coupleInteractions,
 }: {
   profile: Profile;
   partner: Profile;
-  theme: string;
   store?: CoupleInteractionStore;
 }) {
   const [queue, setQueue] = useState<(PartnerGesture & { sent?: boolean })[]>(
@@ -43,7 +41,7 @@ export function GestureToasts({
       if (!foreground || fetching) return;
       fetching = true;
       try {
-        const { inbox } = await store.load(profile.id);
+        const inbox = await store.loadInbox(profile.id);
         if (!active) return;
         const incoming = inbox
           .filter(
@@ -135,7 +133,6 @@ export function GestureToasts({
   return (
     <div
       className="gesture-toast-region"
-      data-theme={theme}
       aria-live="polite"
       aria-atomic="true"
       aria-label="Little love from your person"

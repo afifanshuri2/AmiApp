@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Check, Pencil, Plus, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { itemMotion } from "./motion-presets";
+import { Check, ListChecks, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { reminderTime, timeLeft } from "../lib/everyday";
 import type { Entry } from "../lib/types";
@@ -27,76 +29,80 @@ export function ReminderStrip({
     return () => window.clearInterval(timer);
   }, []);
   return (
-    <section className="reminders-section" aria-label="To-dos & reminders">
-      <div className="section-heading">
-        <h2>{todos.filter((todo) => !todo.done).length} of things to do</h2>
-        <span className="muted">A thought, a date, done.</span>
-      </div>
+    <section className="reminders-section" aria-label="To-dos">
+      <button type="button" className="add-row" onClick={onAdd}>
+        <span className="chip k3">
+          <Plus size={20} aria-hidden="true" />
+        </span>
+        Add a to-do
+      </button>
       <div className="reminder-strip">
-        <Button
-          variant="outline"
-          className="reminder-add"
-          aria-label="Add to-do"
-          onClick={onAdd}
-        >
-          <Plus size={25} />
-          <span>Add a to-do</span>
-        </Button>
-        {todos.map((todo) => (
-          <article
-            className={`reminder-note ${todo.done ? "is-done" : ""}`}
-            key={todo.id}
-          >
-            <div className="reminder-top">
-              <button
-                className="checkbox"
-                disabled={busy}
-                aria-label={`${todo.done ? "Mark incomplete" : "Complete"}: ${todo.detail || todo.title}`}
-                aria-pressed={todo.done}
-                onClick={() => onToggle(todo)}
-              >
-                {todo.done && <Check size={13} />}
-              </button>
-              <time dateTime={reminderTime(todo) || undefined}>
-                {todo.done
-                  ? "Done together ♡"
-                  : now === null
-                    ? "Checking time…"
-                    : timeLeft(reminderTime(todo), now)}
-              </time>
-              <div>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  aria-label={`Edit ${todo.title}`}
-                  onClick={() => onEdit(todo)}
-                >
-                  <Pencil size={13} />
-                </Button>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
+        {todos.length === 0 && (
+          <div className="empty-state" role="status">
+            <span className="chip k3">
+              <ListChecks size={22} aria-hidden="true" />
+            </span>
+            Nothing to do. Add a thought with a date.
+          </div>
+        )}
+        <AnimatePresence initial={false} mode="popLayout">
+          {todos.map((todo) => (
+            <motion.article
+              className={`reminder-note ${todo.done ? "is-done" : ""}`}
+              key={todo.id}
+              {...itemMotion}
+            >
+              <div className="reminder-top">
+                <button
+                  className="checkbox"
                   disabled={busy}
-                  aria-label={`Delete ${todo.title}`}
-                  onClick={() => onDelete(todo)}
+                  aria-label={`${todo.done ? "Mark incomplete" : "Complete"}: ${todo.detail || todo.title}`}
+                  aria-pressed={todo.done}
+                  onClick={() => onToggle(todo)}
                 >
-                  <Trash2 size={13} />
-                </Button>
+                  {todo.done && <Check size={14} />}
+                </button>
+                <time dateTime={reminderTime(todo) || undefined}>
+                  {todo.done
+                    ? "Done"
+                    : now === null
+                      ? ""
+                      : timeLeft(reminderTime(todo), now)}
+                </time>
+                <div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Edit ${todo.title}`}
+                    onClick={() => onEdit(todo)}
+                  >
+                    <Pencil size={16} />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    disabled={busy}
+                    aria-label={`Delete ${todo.title}`}
+                    onClick={() => onDelete(todo)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <p>{todo.detail || todo.title}</p>
-            {reminderTime(todo) && (
-              <small>
-                {new Date(reminderTime(todo)!).toLocaleString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </small>
-            )}
-          </article>
-        ))}
+              <p>{todo.detail || todo.title}</p>
+              {reminderTime(todo) && (
+                <small>
+                  {new Date(reminderTime(todo)!).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </small>
+              )}
+            </motion.article>
+          ))}
+        </AnimatePresence>
       </div>
     </section>
   );

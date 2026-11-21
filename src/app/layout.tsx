@@ -1,6 +1,12 @@
 import "./globals.css";
-import { Schoolbell } from "next/font/google";
+import { Figtree, Schoolbell } from "next/font/google";
 
+const figtree = Figtree({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-figtree",
+});
+// Handwriting is kept for the fridge note and journal pages only.
 const schoolbell = Schoolbell({
   weight: "400",
   subsets: ["latin"],
@@ -15,10 +21,19 @@ export const metadata = {
   icons: { icon: "/amiapp-mark.svg", apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "AmiApp", statusBarStyle: "default" },
 };
-export const viewport = { themeColor: "#b96379" };
+export const viewport = { themeColor: "#c2456b" };
+// Applies the saved accent and colour mode before first paint, avoiding a flash.
+const themeScript = `try{var d=document.documentElement,t=localStorage.getItem("ami-theme"),m=localStorage.getItem("ami-mode");if(t==="sage"||t==="lavender")d.dataset.theme=t;d.dataset.mode=m==="dark"||(m!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light"}catch(e){}`;
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={schoolbell.variable}>
+    <html
+      lang="en"
+      className={`${figtree.variable} ${schoolbell.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>{children}</body>
     </html>
   );

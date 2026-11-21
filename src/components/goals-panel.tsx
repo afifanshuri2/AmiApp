@@ -1,115 +1,104 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
-import { EverydayCard } from "./everyday-card";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { kindMeta } from "./kind-meta";
 import { goalHistory, type GoalHistoryStore } from "../lib/goal-history";
 import { goalProgress } from "../lib/everyday";
+import { ProgressBar } from "./motion-bits";
+import { itemMotion } from "./motion-presets";
 import type { Entry, GoalUpdate, Profile } from "../lib/types";
 
 export function GoalsPanel({
   goals,
-  compact,
   loading,
   busy,
-  onOpen,
   onSelect,
   onAdd,
   onEdit,
   onDelete,
 }: {
   goals: Entry[];
-  compact: boolean;
   loading: boolean;
   busy: boolean;
-  onOpen: () => void;
   onSelect: (goal: Entry) => void;
   onAdd: () => void;
   onEdit: (goal: Entry) => void;
   onDelete: (goal: Entry) => void;
 }) {
+  const { Icon, tone } = kindMeta.Ambitions;
   return (
-    <EverydayCard
-      kind="Ambitions"
-      className="goals-panel"
-      aria-label="Goals & ambitions"
-      onOpen={compact ? onOpen : undefined}
-    >
-      <div className="section-heading">
-        <h2>
-          <Sparkles size={18} />
-          Goals & ambitions
-        </h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Add goal or ambition"
-          onClick={onAdd}
-        >
-          <Plus size={19} />
-        </Button>
-      </div>
-      <p className="section-hint muted">
-        Little steps toward our shared dreams.
-      </p>
+    <section className="collection goals-panel" aria-label="Goals">
+      <button type="button" className="add-row" onClick={onAdd}>
+        <span className={`chip k${tone}`}>
+          <Plus size={20} aria-hidden="true" />
+        </span>
+        Add a goal
+      </button>
       {goals.length ? (
-        <div className="entry-list goal-list">
-          {(compact ? goals.slice(0, 3) : goals).map((goal) => (
-            <div className="goal-item" key={goal.id}>
-              {compact ? (
-                <h3>{goal.title}</h3>
-              ) : (
-                <button className="goal-open" onClick={() => onSelect(goal)}>
+        <div className="entry-list">
+          <AnimatePresence initial={false} mode="popLayout">
+            {goals.map((goal) => (
+              <motion.article
+                className="entry goal-item"
+                key={goal.id}
+                {...itemMotion}
+              >
+                <button
+                  className="goal-open"
+                  onClick={() => onSelect(goal)}
+                  aria-label={`Open ${goal.title}`}
+                >
                   <h3>{goal.title}</h3>
-                  <span>View updates →</span>
+                  <span className="progress-row">
+                    <ProgressBar
+                      value={goalProgress(goal)}
+                      label={`${goal.title} progress`}
+                    />
+                    <span>{goalProgress(goal)}%</span>
+                  </span>
                 </button>
-              )}
-              <div className="progress-row">
-                <progress
-                  max={100}
-                  value={goalProgress(goal)}
-                  aria-label={`${goal.title} progress`}
-                />
-                <span>{goalProgress(goal)}%</span>
-              </div>
-              {!compact && (
-                <div className="goal-actions">
+                <div className="entry-actions">
                   <Button
-                    size="icon-xs"
+                    size="icon"
                     variant="ghost"
                     aria-label={`Edit ${goal.title}`}
                     onClick={() => onEdit(goal)}
                   >
-                    <Pencil size={13} />
+                    <Pencil size={16} />
                   </Button>
                   <Button
-                    size="icon-xs"
+                    size="icon"
                     variant="ghost"
                     disabled={busy}
                     aria-label={`Delete ${goal.title}`}
                     onClick={() => onDelete(goal)}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={16} />
                   </Button>
+                  <ChevronRight
+                    size={18}
+                    className="entry-go"
+                    aria-hidden="true"
+                  />
                 </div>
-              )}
-            </div>
-          ))}
+              </motion.article>
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
-        <Button variant="ghost" className="empty-state" onClick={onAdd}>
-          {loading ? "Gathering your dreams…" : "+ Add a goal or ambition"}
-        </Button>
+        <div className="empty-state" role="status">
+          <span className={`chip k${tone}`}>
+            <Icon size={22} aria-hidden="true" />
+          </span>
+          {loading ? "Loading…" : "Nothing here yet. Add the first goal."}
+        </div>
       )}
-      {compact && goals.length > 3 && (
-        <Button variant="ghost" className="view-all" onClick={onOpen}>
-          See all {goals.length} goals
-        </Button>
-      )}
-    </EverydayCard>
+    </section>
   );
 }
 
@@ -142,7 +131,11 @@ export function GoalDetail({
       void store
         .load(goal.id)
         .then((data) => {
-          if (active) setUpdates(data);
+          if (!active) return;
+          setUpdates((current) =>
+            JSON.stringify(current) === JSON.stringify(data) ? current : data,
+          );
+          setError("");
         })
         .catch((error) => {
           if (active)
@@ -158,25 +151,24 @@ export function GoalDetail({
     refresh();
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") refresh();
-    }, 20000);
+    }, 30000);
     return () => {
       active = false;
       window.clearInterval(timer);
     };
   }, [goal.id, revision, store]);
   return (
-    <section className="goal-detail card">
+    <section className="goal-detail">
       <Button variant="ghost" onClick={onBack} disabled={saving}>
         <ArrowLeft size={16} />
-        All goals & ambitions
+        All goals
       </Button>
       <h2>{goal.title}</h2>
-      {goal.detail && <p className="handwritten">{goal.detail}</p>}
+      {goal.detail && <p className="goal-note">{goal.detail}</p>}
       <div className="progress-row">
-        <progress
-          max={100}
+        <ProgressBar
           value={goalProgress(goal)}
-          aria-label={`${goal.title} progress`}
+          label={`${goal.title} progress`}
         />
         <span>{goalProgress(goal)}%</span>
       </div>
@@ -237,9 +229,9 @@ export function GoalDetail({
         </Label>
         <Button disabled={saving}>{saving ? "Saving…" : "Add update"}</Button>
       </form>
-      <h3>Our progress diary</h3>
+      <h3>Progress diary</h3>
       {loading ? (
-        <p role="status">Gathering your updates…</p>
+        <p role="status">Loading updates…</p>
       ) : updates.length ? (
         <ol className="goal-timeline">
           {updates.map((update) => (

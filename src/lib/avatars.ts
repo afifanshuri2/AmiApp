@@ -13,12 +13,21 @@ export const avatarOptions = {
     curls: "Curls",
     long: "Long",
     none: "No hair",
+    wavy: "Wavy",
+    ponytail: "Ponytail",
+    bun: "Bun",
+    buzz: "Buzz cut",
+    side_part: "Side part",
   },
   hair_color: {
     espresso: "Espresso",
     chestnut: "Chestnut",
     honey: "Honey",
     silver: "Silver",
+    black: "Black",
+    auburn: "Auburn",
+    blonde: "Blonde",
+    pink: "Pink",
   },
   headwear: {
     none: "None",
@@ -31,6 +40,9 @@ export const avatarOptions = {
     hijab_wrap: "Wrapped shawl",
     hijab_instant: "Instant hijab",
     hijab_sport: "Sport hijab",
+    headband: "Headband",
+    bow: "Hair bow",
+    flower_crown: "Flower crown",
   },
   glasses: {
     none: "None",
@@ -56,8 +68,43 @@ export const avatarOptions = {
     sleepy: "Sleepy",
     love: "In love",
     surprised: "Surprised",
+    excited: "Excited",
+    wink: "Winking",
+    cool: "Cool",
+    shy: "Shy",
+    proud: "Proud",
+    silly: "Silly",
   },
-  outfit: { rose: "Rose", sage: "Sage", lavender: "Lavender", blue: "Blue" },
+  clothing: {
+    tee: "T-shirt",
+    hoodie: "Hoodie",
+    shirt: "Collared shirt",
+    sweater: "Sweater",
+    dress: "Dress",
+    jacket: "Jacket",
+    kurung: "Baju kurung",
+    baju_melayu: "Baju Melayu",
+  },
+  outfit: {
+    rose: "Rose",
+    sage: "Sage",
+    lavender: "Lavender",
+    blue: "Blue",
+    coral: "Coral",
+    mustard: "Mustard",
+    navy: "Navy",
+    teal: "Teal",
+    charcoal: "Charcoal",
+    cream: "Cream",
+  },
+  accessory: {
+    none: "None",
+    earrings: "Earrings",
+    necklace: "Necklace",
+    scarf: "Scarf",
+    headphones: "Headphones",
+    bowtie: "Bow tie",
+  },
 } as const;
 export type AvatarConfig = {
   [K in keyof typeof avatarOptions]: keyof (typeof avatarOptions)[K];
@@ -74,6 +121,8 @@ export const defaultAvatar: AvatarConfig = {
   nose: "none",
   facial_hair: "none",
   mood: "happy",
+  clothing: "tee",
+  accessory: "none",
 };
 export function avatarConfig(record?: Partial<AvatarConfig>): AvatarConfig {
   return Object.fromEntries(
@@ -115,4 +164,20 @@ export type PartnerGesture = {
   recipient_id: string;
   kind: GestureKind;
   created_at: string;
+};
+// Used by the mood picker in the avatar editor.
+export const moodEmoji: Record<AvatarConfig["mood"], string> = {
+  happy: "😊",
+  neutral: "😐",
+  angry: "😠",
+  sad: "😢",
+  sleepy: "😴",
+  love: "😍",
+  surprised: "😮",
+  excited: "🤩",
+  wink: "😉",
+  cool: "😎",
+  shy: "😳",
+  proud: "😌",
+  silly: "😜",
 };

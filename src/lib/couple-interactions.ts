@@ -6,44 +6,57 @@ import type {
   PartnerGesture,
 } from "./avatars";
 
+const unavailable = (error: { code?: string }) =>
+  ["42P01", "PGRST205"].includes(error.code || "")
+    ? "Avatar sharing will be ready after this update is published."
+    : "Could not load your avatars and little love. Try again in a moment.";
+
 export interface CoupleInteractionStore {
-  load(
-    userId: string,
-  ): Promise<{ avatars: AvatarRecord[]; inbox: PartnerGesture[] }>;
+  loadAvatars(): Promise<AvatarRecord[]>;
+  loadInbox(userId: string): Promise<PartnerGesture[]>;
   saveAvatar(userId: string, avatar: AvatarConfig): Promise<void>;
   send(kind: GestureKind): Promise<void>;
   acknowledge(id: string): Promise<void>;
 }
+// Avatars and the gesture inbox change at different speeds, so each caller
+// fetches only what it shows instead of sharing one double query.
 export const coupleInteractions: CoupleInteractionStore = {
-  async load(userId) {
+  async loadAvatars() {
     if (!supabase) throw new Error("Could not open your little space.");
-    const [avatars, inbox] = await Promise.all([
-      supabase.from("avatars").select("*"),
-      supabase
-        .from("partner_gestures")
-        .select("id,sender_id,recipient_id,kind,created_at")
-        .eq("recipient_id", userId)
-        .is("read_at", null)
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ]);
-    const error = avatars.error || inbox.error;
-    if (error)
-      throw new Error(
-        ["42P01", "PGRST205"].includes(error.code)
-          ? "Avatar sharing will be ready after this update is published."
-          : "Could not load your avatars and little love. Try again in a moment.",
-      );
-    return { avatars: avatars.data || [], inbox: inbox.data || [] };
+    const { data, error } = await supabase.from("avatars").select("*");
+    if (error) throw new Error(unavailable(error));
+    return data || [];
+  },
+  async loadInbox(userId) {
+    if (!supabase) throw new Error("Could not open your little space.");
+    const { data, error } = await supabase
+      .from("partner_gestures")
+      .select("id,sender_id,recipient_id,kind,created_at")
+      .eq("recipient_id", userId)
+      .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) throw new Error(unavailable(error));
+    return data || [];
   },
   async saveAvatar(userId, avatar) {
     if (!supabase) throw new Error("Could not save your avatar.");
-    const { error } = await supabase
+    let { error } = await supabase
       .from("avatars")
       .upsert({ user_id: userId, ...avatar });
+    // Until the wardrobe update is applied, the clothing and accessory columns
+    // do not exist; save the classic fields so nothing is lost.
+    if (error && ["PGRST204", "42703"].includes(error.code)) {
+      const { clothing: _clothing, accessory: _accessory, ...classic } = avatar;
+      ({ error } = await supabase
+        .from("avatars")
+        .upsert({ user_id: userId, ...classic }));
+    }
     if (error)
       throw new Error(
-        "Could not save your avatar. Your changes are still here to try again.",
+        error.code === "23514"
+          ? "Some of those options are not available yet. Pick a classic look for now."
+          : "Could not save your avatar. Your changes are still here to try again.",
       );
   },
   async send(kind) {

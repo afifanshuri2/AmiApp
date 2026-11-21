@@ -786,6 +786,59 @@ await test("PostgreSQL: pairing, permissions, username uniqueness, and couple is
     );
 
     await check(
+      "avatar wardrobe adds moods, clothing and accessories without loosening ownership",
+      async () => {
+        await as(
+          0,
+          "update public.avatars set mood='excited',hair='ponytail',hair_color='pink',headwear='flower_crown',outfit='teal',clothing='baju_melayu',accessory='headphones' where user_id=$1",
+          [ids[0]],
+        );
+        const saved = (
+          await as(
+            1,
+            "select mood,clothing,accessory from public.avatars where user_id=$1",
+            [ids[0]],
+          )
+        ).rows[0];
+        assert.deepEqual(saved, {
+          mood: "excited",
+          clothing: "baju_melayu",
+          accessory: "headphones",
+        });
+        for (const mood of ["wink", "cool", "shy", "proud", "silly"])
+          await as(0, "update public.avatars set mood=$1 where user_id=$2", [
+            mood,
+            ids[0],
+          ]);
+        for (const clothing of ["tee", "hoodie", "shirt", "sweater", "dress", "jacket", "kurung"])
+          await as(0, "update public.avatars set clothing=$1 where user_id=$2", [
+            clothing,
+            ids[0],
+          ]);
+        await assert.rejects(
+          as(0, "update public.avatars set clothing='armor' where user_id=$1", [
+            ids[0],
+          ]),
+        );
+        await assert.rejects(
+          as(0, "update public.avatars set accessory='crown' where user_id=$1", [
+            ids[0],
+          ]),
+        );
+        assert.equal(
+          (
+            await as(
+              1,
+              "update public.avatars set clothing='hoodie' where user_id=$1 returning user_id",
+              [ids[0]],
+            )
+          ).rows.length,
+          0,
+        );
+      },
+    );
+
+    await check(
       "gesture pushes queue only the broker-generated action and hide dispatch controls",
       async () => {
         await as(

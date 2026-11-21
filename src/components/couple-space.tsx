@@ -28,31 +28,16 @@ export function CoupleSpace({
       setError("");
     }
   }, [profile.couple_id]);
+  // The date changes rarely, so load it once and again when the app returns to
+  // the foreground, instead of polling every few seconds.
   useEffect(() => {
-    let active = true;
-    async function refresh() {
-      if (!active || !supabase) return;
-      const { data, error } = await supabase
-        .from("couple_settings")
-        .select("together_since")
-        .eq("couple_id", profile.couple_id!)
-        .maybeSingle();
-      if (!active) return;
-      if (error) setError(error.message);
-      else {
-        setSettings(data);
-        setError("");
-      }
-    }
-    void refresh();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 20000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
+    void load();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void load();
     };
-  }, [profile.couple_id]);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [load]);
   if (settings === undefined)
     return (
       <main className="pair-shell">

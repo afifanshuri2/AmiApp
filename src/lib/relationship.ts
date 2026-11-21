@@ -32,3 +32,14 @@ export function relationshipDuration(start: string, today = todayDate()) {
       .join(", ") || (startDay === endDay ? "Our first day" : "")
   );
 }
+// Whole calendar days since the start date (never negative).
+export function daysTogether(start: string, today = todayDate()) {
+  const [sy, sm, sd] = start.split("-").map(Number);
+  const [ey, em, ed] = today.split("-").map(Number);
+  return Math.max(
+    0,
+    Math.round(
+      (Date.UTC(ey, em - 1, ed) - Date.UTC(sy, sm - 1, sd)) / 86400000,
+    ),
+  );
+}

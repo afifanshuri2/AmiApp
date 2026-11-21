@@ -46,7 +46,9 @@ export function AmiApp() {
     void refresh();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
+      // Hourly token refreshes change nothing the app shows.
+      if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") return;
       if (active)
         window.setTimeout(() => {
           if (active) void refresh();

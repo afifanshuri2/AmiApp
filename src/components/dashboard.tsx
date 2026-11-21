@@ -1,74 +1,61 @@
 "use client";
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  LayoutDashboard,
-  NotebookPen,
-  Flag,
-  Sparkles,
-  CheckSquare,
-  ShoppingBasket,
-  MapPin,
-  Hourglass,
-  ArrowUpRight,
-  LogOut,
-  Check,
-  RefreshCw,
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+} from "motion/react";
+import {
+  LayoutGrid,
+  ListChecks,
+  BookHeart,
+  Plus,
   Settings,
-  UtensilsCrossed,
+  UserRound,
+  X,
 } from "lucide-react";
-import {
-  kinds,
-  featureKinds,
-  type Entry,
-  type Kind,
-  type Profile,
-} from "../lib/types";
+import type { Entry, Kind, Profile } from "../lib/types";
 import { supabase } from "../lib/supabase";
 import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { EntryEditor, type EntryInput } from "./entry-editor";
-import { Logo } from "./logo";
-import { TogetherCard } from "./together-card";
-import { RelationshipForm } from "./relationship-form";
-import { NotificationSettings } from "./notification-settings";
 import { useNoteBadge } from "../lib/use-note-badge";
-import { signOut } from "../lib/notifications";
-import { ShortNotesNotebook } from "./shortnotes-notebook";
+import { useEntries } from "../lib/use-entries";
+import {
+  groceryLines,
+  latestGroceryList,
+  serializeGrocery,
+} from "../lib/groceries";
+import { useTheme } from "../lib/use-theme";
+import { Home } from "./home";
+import { NotesJournal } from "./notes-journal";
 import { EntryCollection } from "./entry-collection";
 import { GoalsPanel, GoalDetail } from "./goals-panel";
 import { ReminderStrip } from "./reminder-strip";
-import { CouplePlayground } from "./couple-playground";
 import { GestureToasts } from "./gesture-toasts";
-const icons = [
-  NotebookPen,
-  Flag,
-  Sparkles,
-  CheckSquare,
-  ShoppingBasket,
-  MapPin,
-  UtensilsCrossed,
-  Hourglass,
+import { SettingsView } from "./settings-view";
+import { Logo } from "./logo";
+import { createKinds, kindMeta, listKinds } from "./kind-meta";
+
+type View = "Home" | "Notes" | "Lists" | "Settings";
+const tabs: { view: View; label: string; Icon: typeof LayoutGrid }[] = [
+  { view: "Home", label: "Home", Icon: LayoutGrid },
+  { view: "Notes", label: "Journal", Icon: BookHeart },
+  { view: "Lists", label: "Lists", Icon: ListChecks },
+  { view: "Settings", label: "Us", Icon: UserRound },
 ];
-const labels: Record<Kind, string> = {
-  ShortNotes: "ShortNotes",
-  Goals: "Goals & ambitions",
-  Ambitions: "Goals & ambitions",
-  Todos: "To-dos & reminders",
-  Groceries: "Grocery list",
-  Places: "Places to go",
+const createLabel: Record<Kind, string> = {
+  ShortNotes: "Journal entry",
+  Goals: "Goal",
+  Ambitions: "Goal",
+  Todos: "To-do",
+  Groceries: "Grocery item",
+  Places: "Place",
   FoodToTry: "Food to try",
-  Countdowns: "Counting down",
+  Countdowns: "Countdown",
 };
-const hints: Record<Kind, string> = {
-  ShortNotes: "The little things worth keeping.",
-  Goals: "One small step, together.",
-  Ambitions: "A little closer to the life we imagine.",
-  Todos: "Less remembering. More living.",
-  Groceries: "For our next little grocery run.",
-  Places: "Our next “let’s go there”.",
-  FoodToTry: "New flavors, little food adventures, together.",
-  Countdowns: "Good things are on their way.",
-};
+
 export function Dashboard({
   profile,
   partner,
@@ -80,70 +67,45 @@ export function Dashboard({
   togetherSince: string | null;
   onRelationshipSaved: (date: string | null) => Promise<void>;
 }) {
-  const [entries, setEntries] = useState<Entry[]>([]),
-    [view, setView] = useState<Kind | "Dashboard" | "Settings">("Dashboard"),
-    [theme, setTheme] = useState("rose"),
+  const { entries, loading, error: loadError, reload } = useEntries();
+  const { accent, setAccent, mode, setMode } = useTheme();
+  const [view, setView] = useState<View>("Home"),
+    [listKind, setListKind] = useState<Kind>("Groceries"),
     [editor, setEditor] = useState<{ kind: Kind; entry?: Entry } | null>(null),
+    [creating, setCreating] = useState(false),
     [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState("");
-  const [foodCategory, setFoodCategory] = useState("");
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
-  useEffect(() => {
-    setSelectedGoal(null);
-  }, [view]);
+    [error, setError] = useState(""),
+    [foodCategory, setFoodCategory] = useState(""),
+    [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const reduced = useReducedMotion();
+  const notes = entries.filter((e) => e.kind === "ShortNotes");
   const unread = useNoteBadge(
     profile.id,
-    entries.filter((e) => e.kind === "ShortNotes").map((e) => e.id),
-    view === "ShortNotes" && !loading,
+    notes.map((e) => e.id),
+    view === "Notes" && !loading,
   );
+  // A notification tap opens ?view=ShortNotes.
   useEffect(() => {
     if (
       new URLSearchParams(window.location.search).get("view") === "ShortNotes"
     )
-      setView("ShortNotes");
+      setView("Notes");
   }, []);
   useEffect(() => {
-    const saved = localStorage.getItem("ami-theme");
-    if (saved && ["rose", "sage", "lavender"].includes(saved)) setTheme(saved);
+    setSelectedGoal(null);
+  }, [view, listKind]);
+  const go = useCallback((next: View) => {
+    setView(next);
+    setError("");
+    window.scrollTo({ top: 0 });
   }, []);
-  async function load() {
-    if (!supabase) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("entries")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) setError(error.message);
-    else {
-      setEntries(data || []);
-      setError("");
-    }
-    setLoading(false);
-  }
-  useEffect(() => {
-    let active = true;
-    async function fetchEntries() {
-      if (!supabase) return;
-      const { data, error } = await supabase
-        .from("entries")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (!active) return;
-      if (error) setError(error.message);
-      else setEntries(data || []);
-      setLoading(false);
-    }
-    void fetchEntries();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void fetchEntries();
-    }, 20000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, []);
+  const openKind = useCallback(
+    (kind: Kind) => {
+      setListKind(kind === "Goals" ? "Ambitions" : kind);
+      go("Lists");
+    },
+    [go],
+  );
   async function mutate(
     action: () => PromiseLike<{ error: { message: string } | null }>,
   ) {
@@ -152,7 +114,7 @@ export function Dashboard({
     try {
       const { error } = await action();
       if (error) throw error;
-      await load();
+      await reload();
       return true;
     } catch (e) {
       setError(
@@ -167,8 +129,8 @@ export function Dashboard({
   }
   async function save(data: EntryInput) {
     if (!supabase || !editor) return;
-    const client = supabase;
-    const current = editor;
+    const client = supabase,
+      current = editor;
     const ok = await mutate(() =>
       current.entry
         ? client
@@ -189,9 +151,65 @@ export function Dashboard({
     );
     if (ok) setEditor(null);
   }
-  const goals = entries.filter(
-    (entry) => entry.kind === "Goals" || entry.kind === "Ambitions",
-  );
+  async function writeJournal(title: string, body: string) {
+    if (!supabase) return false;
+    // A page needs a title; borrow the first words when only the body is written.
+    const heading = Array.from(title || body)
+      .slice(0, 80)
+      .join("")
+      .trim();
+    return mutate(() =>
+      supabase!.from("entries").insert({
+        kind: "ShortNotes",
+        title: title ? Array.from(title).slice(0, 160).join("") : heading,
+        detail: title ? body : body.length > heading.length ? body : "",
+        couple_id: profile.couple_id,
+        created_by: profile.id,
+      }),
+    );
+  }
+  // The fridge note edits the newest grocery list: items are lines of its text,
+  // and a ticked item is stored as "[x] item".
+  async function addGroceryLine(text: string) {
+    if (!supabase) return false;
+    const list = latestGroceryList(entries);
+    if (!list)
+      return mutate(() =>
+        supabase!.from("entries").insert({
+          kind: "Groceries",
+          title: "Groceries",
+          detail: text,
+          couple_id: profile.couple_id,
+          created_by: profile.id,
+        }),
+      );
+    const lines = groceryLines(list);
+    if (!lines.length) lines.push({ text: list.title, done: list.done });
+    lines.push({ text, done: false });
+    return mutate(() =>
+      supabase!
+        .from("entries")
+        .update({
+          detail: serializeGrocery(lines),
+          done: lines.every((l) => l.done),
+        })
+        .eq("id", list.id),
+    );
+  }
+  function toggleGroceryLine(list: Entry, index: number) {
+    const lines = groceryLines(list);
+    if (!lines.length) return toggleEntry(list);
+    lines[index] = { ...lines[index], done: !lines[index].done };
+    void mutate(() =>
+      supabase!
+        .from("entries")
+        .update({
+          detail: serializeGrocery(lines),
+          done: lines.every((l) => l.done),
+        })
+        .eq("id", list.id),
+    );
+  }
   function deleteEntry(entry: Entry) {
     if (window.confirm(`Delete “${entry.title}” for both of you?`))
       void mutate(() => supabase!.from("entries").delete().eq("id", entry.id));
@@ -204,285 +222,291 @@ export function Dashboard({
         .eq("id", entry.id),
     );
   }
-  function section(kind: Kind, compact = false) {
-    if (kind === "Ambitions" || kind === "Goals") {
-      const goal = goals.find((goal) => goal.id === selectedGoal);
-      if (!compact && goal)
-        return (
-          <GoalDetail
-            goal={goal}
-            profile={profile}
-            partner={partner}
-            onBack={() => setSelectedGoal(null)}
-            onSaved={load}
-          />
-        );
-      return (
+  const goals = entries.filter(
+    (e) => e.kind === "Goals" || e.kind === "Ambitions",
+  );
+  const heading =
+    view === "Home"
+      ? `Hi ${profile.username}`
+      : view === "Notes"
+        ? "Journal"
+        : view === "Lists"
+          ? "Our lists"
+          : "Us";
+  function list() {
+    if (listKind === "Ambitions" || listKind === "Goals") {
+      const goal = goals.find((g) => g.id === selectedGoal);
+      return goal ? (
+        <GoalDetail
+          goal={goal}
+          profile={profile}
+          partner={partner}
+          onBack={() => setSelectedGoal(null)}
+          onSaved={reload}
+        />
+      ) : (
         <GoalsPanel
-          key="Ambitions"
           goals={goals}
-          compact={compact}
-          busy={busy}
           loading={loading}
-          onOpen={() => setView("Ambitions")}
-          onSelect={(goal) => setSelectedGoal(goal.id)}
+          busy={busy}
+          onSelect={(g) => setSelectedGoal(g.id)}
           onAdd={() => setEditor({ kind: "Ambitions" })}
           onEdit={(entry) => setEditor({ kind: "Ambitions", entry })}
           onDelete={deleteEntry}
         />
       );
     }
-    const list = entries.filter(
-      (e) =>
-        e.kind === kind &&
-        (kind !== "FoodToTry" ||
-          compact ||
-          !foodCategory ||
-          e.category === foodCategory),
-    );
-    const Icon = icons[kinds.indexOf(kind)];
-    if (kind === "ShortNotes")
+    if (listKind === "Todos")
       return (
-        <ShortNotesNotebook
-          key={kind}
-          notes={list}
-          profile={profile}
-          partner={partner}
-          compact={compact}
-          loading={loading}
+        <ReminderStrip
+          todos={entries.filter((e) => e.kind === "Todos")}
           busy={busy}
-          onAdd={() => setEditor({ kind })}
-          onEdit={(entry) => setEditor({ kind, entry })}
-          onOpen={() => setView("ShortNotes")}
-          onDelete={(entry) => {
-            if (window.confirm(`Delete “${entry.title}” for both of you?`))
-              void mutate(() =>
-                supabase!.from("entries").delete().eq("id", entry.id),
-              );
-          }}
+          onAdd={() => setEditor({ kind: "Todos" })}
+          onEdit={(entry) => setEditor({ kind: "Todos", entry })}
+          onDelete={deleteEntry}
+          onToggle={toggleEntry}
         />
       );
     return (
       <EntryCollection
-        key={kind}
-        kind={kind}
+        kind={listKind as Exclude<Kind, "ShortNotes">}
         entries={entries}
-        label={labels[kind]}
-        hint={hints[kind]}
-        Icon={Icon}
-        compact={compact}
         loading={loading}
         busy={busy}
         foodCategory={foodCategory}
         setFoodCategory={setFoodCategory}
-        onOpen={() => setView(kind)}
-        onAdd={() => setEditor({ kind })}
-        onEdit={(entry) => setEditor({ kind, entry })}
-        onDelete={(entry) => {
-          if (window.confirm(`Delete “${entry.title}” for both of you?`))
-            void mutate(() =>
-              supabase!.from("entries").delete().eq("id", entry.id),
-            );
-        }}
-        onToggle={(entry) => {
-          void mutate(() =>
-            supabase!
-              .from("entries")
-              .update({ done: !entry.done })
-              .eq("id", entry.id),
-          );
-        }}
+        onAdd={() => setEditor({ kind: listKind })}
+        onEdit={(entry) => setEditor({ kind: listKind, entry })}
+        onDelete={deleteEntry}
+        onToggle={toggleEntry}
       />
     );
   }
-
-  return (
-    <div className="app-shell" data-theme={theme}>
-      <aside className="sidebar">
-        <a className="wordmark" href="#" onClick={() => setView("Dashboard")}>
-          <Logo />
-        </a>
-        <nav aria-label="Main navigation">
-          <button
-            className={view === "Dashboard" ? "active" : ""}
-            onClick={() => setView("Dashboard")}
-          >
-            <LayoutDashboard size={18} />
-            Our dashboard
-          </button>
-          <p className="nav-caption">OUR EVERYDAY</p>
-          {featureKinds.map((kind) => {
-            const Icon = icons[kinds.indexOf(kind)];
-            return (
-              <button
-                key={kind}
-                className={view === kind ? "active" : ""}
-                onClick={() => setView(kind)}
-              >
-                <Icon size={18} />
-                {labels[kind]}
-                {kind === "ShortNotes" && unread > 0 && (
-                  <span
-                    className="unread-badge"
-                    aria-label={`${unread} unread notes`}
-                  >
-                    {unread}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="sidebar-bottom">
-          <button
-            className={view === "Settings" ? "active" : ""}
-            onClick={() => setView("Settings")}
-          >
-            <Settings size={18} />
-            Settings
-          </button>
-        </div>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <span>
-            Our little corner{" "}
-            <span className="muted">
-              /{" "}
-              {view === "Dashboard" || view === "Settings"
-                ? view
-                : labels[view]}
+  const navButtons = (items: typeof tabs, scope: string) =>
+    items.map(({ view: v, label, Icon }) => (
+      <motion.button
+        key={v}
+        type="button"
+        className={`nav-btn ${view === v ? "on" : ""}`}
+        aria-current={view === v ? "page" : undefined}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => go(v)}
+      >
+        <span className="nav-icon">
+          {view === v && (
+            <motion.span
+              layoutId={`nav-pill-${scope}`}
+              className="nav-pill"
+              transition={{ type: "spring", stiffness: 500, damping: 36 }}
+            />
+          )}
+          <Icon size={24} aria-hidden="true" />
+          {v === "Notes" && unread > 0 && (
+            <span className="badge" aria-label={`${unread} unread notes`}>
+              {unread}
             </span>
-          </span>
-          <div className="theme-picker" aria-label="Color theme">
-            {["rose", "sage", "lavender"].map((t) => (
-              <button
-                key={t}
-                className={`theme-dot ${t}`}
-                aria-label={`${t} theme`}
-                aria-pressed={theme === t}
-                onClick={() => {
-                  setTheme(t);
-                  localStorage.setItem("ami-theme", t);
-                }}
-              >
-                {theme === t && <Check size={12} />}
-              </button>
-            ))}
+          )}
+        </span>
+        {label}
+      </motion.button>
+    ));
+  return (
+    <MotionConfig reducedMotion="user">
+      <div className="app">
+        <nav className="rail" aria-label="Main navigation">
+          <div className="rail-logo" aria-hidden="true">
+            <Logo />
           </div>
-        </header>
-        <main className="dashboard">
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">
+          <motion.button
+            type="button"
+            className="create-btn"
+            aria-label="Create"
+            whileHover={{ rotate: 90, scale: 1.06 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            onClick={() => setCreating(true)}
+          >
+            <Plus size={24} aria-hidden="true" />
+          </motion.button>
+          {navButtons(tabs, "rail")}
+        </nav>
+        <main className={`page view-${view}`}>
+          <header className="page-head">
+            <h1>{heading}</h1>
+            {view === "Home" && (
+              <p className="muted">
                 {new Date().toLocaleDateString(undefined, {
                   weekday: "long",
                   month: "long",
                   day: "numeric",
                 })}
               </p>
-              <h1>
-                {view === "Dashboard"
-                  ? "Home is wherever we are."
-                  : view === "Settings"
-                    ? "Our settings"
-                    : labels[view]}
-              </h1>
-              <p className="muted">
-                {view === "Dashboard"
-                  ? `Hey ${profile.username}, let’s make a little room for us today. ♡`
-                  : view === "Settings"
-                    ? "The little details that make this space ours."
-                    : hints[view]}
-              </p>
-            </div>
-          </div>
-          {error && (
+            )}
+          </header>
+          {(error || loadError) && (
             <p className="error" role="alert">
-              {error}
+              {error || loadError}
             </p>
           )}
-          <AnimatePresence mode="wait">
+          {view === "Lists" && (
+            <div className="seg-tabs" role="tablist" aria-label="Lists">
+              {listKinds.map((kind) => {
+                const { label, Icon } = kindMeta[kind];
+                const on =
+                  listKind === kind ||
+                  (kind === "Ambitions" && listKind === "Goals");
+                return (
+                  <motion.button
+                    key={kind}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => setListKind(kind)}
+                  >
+                    {on && (
+                      <motion.span
+                        layoutId="seg-pill"
+                        className="seg-pill"
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 38,
+                        }}
+                      />
+                    )}
+                    <Icon size={18} aria-hidden="true" />
+                    <span>{label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={view}
+              key={view === "Lists" ? `Lists-${listKind}` : view}
               initial={reduced ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reduced ? {} : { opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              exit={reduced ? {} : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
             >
-              {view === "Settings" ? (
-                <div className="single-collection">
-                  <RelationshipForm
-                    initialDate={togetherSince}
-                    onSaved={onRelationshipSaved}
-                  />
-                  <NotificationSettings userId={profile.id} />
-                  <div>
-                    <Button variant="outline" onClick={signOut}>
-                      <LogOut size={16} />
-                      Log out
-                    </Button>
-                  </div>
-                </div>
-              ) : view === "Dashboard" ? (
-                <>
-                  <CouplePlayground
-                    key={profile.id}
-                    profile={profile}
-                    partner={partner}
-                    theme={theme}
-                  />
-                  {togetherSince && <TogetherCard since={togetherSince} />}
-                  <ReminderStrip
-                    todos={entries.filter((entry) => entry.kind === "Todos")}
-                    busy={busy}
-                    onAdd={() => setEditor({ kind: "Todos" })}
-                    onEdit={(entry) => setEditor({ kind: "Todos", entry })}
-                    onDelete={deleteEntry}
-                    onToggle={toggleEntry}
-                  />
-                  <div className="grid-heading">
-                    <h2>A little of our everyday</h2>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label="Refresh shared data"
-                      disabled={loading}
-                      onClick={load}
-                    >
-                      <RefreshCw size={16} />
-                    </Button>
-                  </div>
-                  <div className="collections-grid">
-                    {featureKinds.map((k) => section(k, true))}
-                  </div>
-                  <footer>
-                    Built on little things. Held together with love. ♡
-                  </footer>
-                </>
+              {view === "Home" ? (
+                <Home
+                  profile={profile}
+                  partner={partner}
+                  togetherSince={togetherSince}
+                  entries={entries}
+                  unread={unread}
+                  busy={busy}
+                  onOpenKind={openKind}
+                  onOpenNotes={() => go("Notes")}
+                  onToggle={toggleEntry}
+                  onAdd={(kind) => setEditor({ kind })}
+                  onToggleGroceryLine={toggleGroceryLine}
+                  onAddGroceryLine={addGroceryLine}
+                />
+              ) : view === "Notes" ? (
+                <NotesJournal
+                  notes={notes}
+                  profile={profile}
+                  partner={partner}
+                  loading={loading}
+                  busy={busy}
+                  onWrite={writeJournal}
+                  onEdit={(entry) => setEditor({ kind: "ShortNotes", entry })}
+                  onDelete={deleteEntry}
+                />
+              ) : view === "Lists" ? (
+                list()
               ) : (
-                <div className="single-collection">{section(view)}</div>
+                <SettingsView
+                  userId={profile.id}
+                  togetherSince={togetherSince}
+                  onRelationshipSaved={onRelationshipSaved}
+                  accent={accent}
+                  setAccent={setAccent}
+                  mode={mode}
+                  setMode={setMode}
+                />
               )}
             </motion.div>
           </AnimatePresence>
         </main>
+        <nav className="tabbar" aria-label="Tabs">
+          {navButtons(tabs.slice(0, 2), "bar-a")}
+          <motion.button
+            type="button"
+            className="create-btn"
+            aria-label="Create"
+            whileTap={{ scale: 0.88, rotate: 90 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            onClick={() => setCreating(true)}
+          >
+            <Plus size={26} aria-hidden="true" />
+          </motion.button>
+          {navButtons(tabs.slice(2), "bar-b")}
+        </nav>
+        <GestureToasts key={profile.id} profile={profile} partner={partner} />
+        {creating && (
+          <Dialog open onOpenChange={(open) => !open && setCreating(false)}>
+            <DialogContent
+              className="sheet"
+              showCloseButton={false}
+              aria-describedby={undefined}
+            >
+              <div className="section-heading">
+                <DialogTitle asChild>
+                  <h2>Create</h2>
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close"
+                  onClick={() => setCreating(false)}
+                >
+                  <X size={18} />
+                </Button>
+              </div>
+              <div className="sheet-list">
+                {createKinds.map((kind, index) => {
+                  const { Icon, tone } = kindMeta[kind];
+                  return (
+                    <motion.button
+                      key={kind}
+                      type="button"
+                      initial={{ opacity: 0, x: -14 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        delay: 0.04 + index * 0.035,
+                        duration: 0.2,
+                      }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        setCreating(false);
+                        setEditor({ kind });
+                      }}
+                    >
+                      <span className={`chip k${tone}`}>
+                        <Icon size={22} aria-hidden="true" />
+                      </span>
+                      {createLabel[kind]}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+        {editor && (
+          <EntryEditor
+            kind={editor.kind}
+            entry={editor.entry}
+            busy={busy}
+            save={save}
+            close={() => setEditor(null)}
+          />
+        )}
       </div>
-      <GestureToasts
-        key={profile.id}
-        profile={profile}
-        partner={partner}
-        theme={theme}
-      />
-      {editor && (
-        <EntryEditor
-          theme={theme}
-          kind={editor.kind}
-          entry={editor.entry}
-          busy={busy}
-          save={save}
-          close={() => setEditor(null)}
-        />
-      )}
-    </div>
+    </MotionConfig>
   );
 }

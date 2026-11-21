@@ -21,16 +21,24 @@ export type EntryInput = Pick<
   | "due_at"
   | "emoji"
 >;
+const kindName: Record<Kind, string> = {
+  ShortNotes: "journal entry",
+  Goals: "goal",
+  Ambitions: "goal",
+  Todos: "to-do",
+  Groceries: "grocery item",
+  Places: "place",
+  FoodToTry: "food to try",
+  Countdowns: "countdown",
+};
 export function EntryEditor({
   kind,
-  theme,
   entry,
   busy,
   save,
   close,
 }: {
   kind: Kind;
-  theme: string;
   entry?: Entry;
   busy: boolean;
   save: (data: EntryInput) => Promise<void>;
@@ -50,14 +58,13 @@ export function EntryEditor({
     >
       <DialogContent
         className="entry-dialog"
-        data-theme={theme}
         showCloseButton={false}
         aria-describedby={undefined}
       >
         <div className="section-heading">
           <DialogTitle asChild>
             <h2>
-              {entry ? "Edit a little thing" : "Make room for something good"}
+              {entry ? "Edit" : "New"} {kindName[kind]}
             </h2>
           </DialogTitle>
           <Button
@@ -70,15 +77,6 @@ export function EntryEditor({
             <X size={18} />
           </Button>
         </div>
-        <p className="eyebrow">
-          {kind === "FoodToTry"
-            ? "Food to try"
-            : kind === "Ambitions"
-              ? "Goals & ambitions"
-              : kind === "Todos"
-                ? "A little to-do"
-                : kind}
-        </p>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -294,9 +292,7 @@ export function EntryEditor({
               />
             </Label>
           )}
-          <Button disabled={busy}>
-            {busy ? "Saving…" : "Save to our space ♡"}
-          </Button>
+          <Button disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
         </form>
       </DialogContent>
     </Dialog>
