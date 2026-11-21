@@ -30,6 +30,7 @@ import {
 import { useTheme } from "../lib/use-theme";
 import { Home } from "./home";
 import { NotesChat } from "./notes-chat";
+import { GroceryBook } from "./grocery-book";
 import { EntryCollection } from "./entry-collection";
 import { GoalsPanel, GoalDetail } from "./goals-panel";
 import { ReminderStrip } from "./reminder-strip";
@@ -169,9 +170,9 @@ export function Dashboard({
   }
   // The fridge note edits the newest grocery list: items are lines of its text,
   // and a ticked item is stored as "[x] item".
-  async function addGroceryLine(text: string) {
+  async function addGroceryLine(text: string, target?: Entry) {
     if (!supabase) return false;
-    const list = latestGroceryList(entries);
+    const list = target ?? latestGroceryList(entries);
     if (!list)
       return mutate(() =>
         supabase!.from("entries").insert({
@@ -264,6 +265,18 @@ export function Dashboard({
           onEdit={(entry) => setEditor({ kind: "Todos", entry })}
           onDelete={deleteEntry}
           onToggle={toggleEntry}
+        />
+      );
+    if (listKind === "Groceries")
+      return (
+        <GroceryBook
+          lists={entries.filter((e) => e.kind === "Groceries")}
+          busy={busy}
+          onToggleLine={toggleGroceryLine}
+          onAddLine={addGroceryLine}
+          onNewList={() => setEditor({ kind: "Groceries" })}
+          onEdit={(entry) => setEditor({ kind: "Groceries", entry })}
+          onDelete={deleteEntry}
         />
       );
     return (

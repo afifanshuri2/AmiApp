@@ -460,15 +460,45 @@ export function CouplePlayground({
         </div>
       )}
       {(dates.length > 0 || onAddDate) && (
-        <ul className="hero-dates" aria-label="Important dates">
+        <ul
+          className="hero-dates"
+          aria-label="Important dates"
+          style={
+            {
+              "--n": Math.min(dates.length, MAX_DATES) || 1,
+            } as React.CSSProperties
+          }
+        >
           {dates.slice(0, MAX_DATES).map((entry) => {
             const days = daysUntil(entry.due_date!);
             return (
               <li key={entry.id}>
-                <span>{entry.title}</span>
-                <b>
-                  {days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days}d`}
-                </b>
+                <span
+                  className="date-ring"
+                  style={
+                    {
+                      "--fill": Math.max(0.06, 1 - Math.min(days, 90) / 90),
+                    } as React.CSSProperties
+                  }
+                >
+                  <svg viewBox="0 0 44 44" aria-hidden="true">
+                    <circle cx="22" cy="22" r="19" pathLength="1" />
+                    <circle cx="22" cy="22" r="19" pathLength="1" />
+                  </svg>
+                  {days === 0 ? (
+                    <Heart size={20} aria-label="Today" />
+                  ) : (
+                    <b>{days}</b>
+                  )}
+                </span>
+                <span className="date-name">{entry.title}</span>
+                <small>
+                  {days === 0
+                    ? "Today"
+                    : days === 1
+                      ? "day to go"
+                      : "days to go"}
+                </small>
               </li>
             );
           })}

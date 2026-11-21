@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, Plus } from "lucide-react";
 import { itemMotion } from "./motion-presets";
@@ -17,6 +17,8 @@ export function GroceryNote({
   onAddLine,
   onNewList,
   onOpenAll,
+  showAll = false,
+  footer,
 }: {
   list: Entry | undefined;
   totalLists: number;
@@ -25,6 +27,9 @@ export function GroceryNote({
   onAddLine: (text: string) => Promise<boolean>;
   onNewList: () => void;
   onOpenAll: () => void;
+  /** In the lists tab every item shows and the footer is supplied. */
+  showAll?: boolean;
+  footer?: ReactNode;
 }) {
   const [text, setText] = useState("");
   // A list with no item lines is a single item named by its title.
@@ -34,6 +39,7 @@ export function GroceryNote({
       : [{ text: list.title, done: list.done }]
     : [];
   const single = !!list && groceryLines(list).length === 0;
+  const shown = showAll ? lines.length : SHOWN;
   const left = lines.filter((line) => !line.done).length;
   return (
     <motion.section
@@ -55,7 +61,7 @@ export function GroceryNote({
       </header>
       <ul>
         <AnimatePresence initial={false} mode="popLayout">
-          {lines.slice(0, SHOWN).map((line, index) => (
+          {lines.slice(0, shown).map((line, index) => (
             <motion.li
               key={`${list!.id}-${index}-${line.text}`}
               {...itemMotion}
@@ -96,16 +102,19 @@ export function GroceryNote({
         />
       </form>
       <div className="note-foot">
-        {lines.length > SHOWN && (
+        {footer}
+        {!footer && lines.length > SHOWN && (
           <button type="button" className="note-more" onClick={onOpenAll}>
             See {lines.length - SHOWN} more
             <ChevronRight size={14} aria-hidden="true" />
           </button>
         )}
-        <button type="button" className="note-more" onClick={onNewList}>
-          New list
-        </button>
-        {totalLists > 1 && (
+        {!footer && (
+          <button type="button" className="note-more" onClick={onNewList}>
+            New list
+          </button>
+        )}
+        {!footer && totalLists > 1 && (
           <button type="button" className="note-more" onClick={onOpenAll}>
             Older lists
             <ChevronRight size={14} aria-hidden="true" />
