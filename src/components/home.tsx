@@ -1,6 +1,11 @@
 "use client";
 import { motion, type Variants } from "motion/react";
-import { BookHeart, ChevronRight, MapPin, UtensilsCrossed } from "lucide-react";
+import {
+  MessageCircle,
+  ChevronRight,
+  MapPin,
+  UtensilsCrossed,
+} from "lucide-react";
 import { CouplePlayground } from "./couple-playground";
 import { CountUp } from "./motion-bits";
 import { TodoFocus } from "./todo-focus";
@@ -153,18 +158,18 @@ export function Home({
           onClick={onOpenNotes}
         >
           <span className="chip k1">
-            <BookHeart size={22} aria-hidden="true" />
+            <MessageCircle size={22} aria-hidden="true" />
           </span>
           <span className="latest-copy">
             <strong>
               {latest
                 ? `${latest.created_by === profile.id ? "You" : partner.username} wrote`
-                : "Journal"}
+                : "Notes"}
             </strong>
-            <span>{latest ? latest.title : "Write the first page"}</span>
+            <span>{latest ? latest.title : "Say something small"}</span>
           </span>
           {unread > 0 && (
-            <span className="badge" aria-label={`${unread} unread entries`}>
+            <span className="badge" aria-label={`${unread} unread notes`}>
               {unread}
             </span>
           )}

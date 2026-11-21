@@ -1,8 +1,8 @@
 import {
-  BookHeart,
   Flag,
   Hourglass,
   ListChecks,
+  MessageCircle,
   MapPin,
   ShoppingBasket,
   UtensilsCrossed,
@@ -16,9 +16,9 @@ export const kindMeta: Record<
   { label: string; hint: string; Icon: LucideIcon; tone: number }
 > = {
   ShortNotes: {
-    label: "Journal",
+    label: "Notes",
     hint: "The little things worth keeping.",
-    Icon: BookHeart,
+    Icon: MessageCircle,
     tone: 1,
   },
   Goals: {

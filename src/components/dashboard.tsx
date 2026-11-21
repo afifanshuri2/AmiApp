@@ -9,7 +9,7 @@ import {
 import {
   LayoutGrid,
   ListChecks,
-  BookHeart,
+  MessageCircle,
   Plus,
   Settings,
   UserRound,
@@ -29,7 +29,7 @@ import {
 } from "../lib/groceries";
 import { useTheme } from "../lib/use-theme";
 import { Home } from "./home";
-import { NotesJournal } from "./notes-journal";
+import { NotesChat } from "./notes-chat";
 import { EntryCollection } from "./entry-collection";
 import { GoalsPanel, GoalDetail } from "./goals-panel";
 import { ReminderStrip } from "./reminder-strip";
@@ -41,12 +41,12 @@ import { createKinds, kindMeta, listKinds } from "./kind-meta";
 type View = "Home" | "Notes" | "Lists" | "Settings";
 const tabs: { view: View; label: string; Icon: typeof LayoutGrid }[] = [
   { view: "Home", label: "Home", Icon: LayoutGrid },
-  { view: "Notes", label: "Journal", Icon: BookHeart },
+  { view: "Notes", label: "Notes", Icon: MessageCircle },
   { view: "Lists", label: "Lists", Icon: ListChecks },
   { view: "Settings", label: "Us", Icon: UserRound },
 ];
 const createLabel: Record<Kind, string> = {
-  ShortNotes: "Journal entry",
+  ShortNotes: "Note",
   Goals: "Goal",
   Ambitions: "Goal",
   Todos: "To-do",
@@ -151,18 +151,17 @@ export function Dashboard({
     );
     if (ok) setEditor(null);
   }
-  async function writeJournal(title: string, body: string) {
+  async function sendNote(text: string) {
     if (!supabase) return false;
-    // A page needs a title; borrow the first words when only the body is written.
-    const heading = Array.from(title || body)
-      .slice(0, 80)
-      .join("")
-      .trim();
+    // A note is a title; a long one keeps its full text in the detail.
+    const letters = Array.from(text),
+      title =
+        letters.length <= 160 ? text : letters.slice(0, 157).join("") + "…";
     return mutate(() =>
       supabase!.from("entries").insert({
         kind: "ShortNotes",
-        title: title ? Array.from(title).slice(0, 160).join("") : heading,
-        detail: title ? body : body.length > heading.length ? body : "",
+        title,
+        detail: title === text ? "" : text,
         couple_id: profile.couple_id,
         created_by: profile.id,
       }),
@@ -229,7 +228,7 @@ export function Dashboard({
     view === "Home"
       ? `Hi ${profile.username}`
       : view === "Notes"
-        ? "Journal"
+        ? partner.username
         : view === "Lists"
           ? "Our lists"
           : "Us";
@@ -406,13 +405,13 @@ export function Dashboard({
                   onAddGroceryLine={addGroceryLine}
                 />
               ) : view === "Notes" ? (
-                <NotesJournal
+                <NotesChat
                   notes={notes}
                   profile={profile}
                   partner={partner}
                   loading={loading}
                   busy={busy}
-                  onWrite={writeJournal}
+                  onSend={sendNote}
                   onEdit={(entry) => setEditor({ kind: "ShortNotes", entry })}
                   onDelete={deleteEntry}
                 />

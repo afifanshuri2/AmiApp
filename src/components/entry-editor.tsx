@@ -22,7 +22,7 @@ export type EntryInput = Pick<
   | "emoji"
 >;
 const kindName: Record<Kind, string> = {
-  ShortNotes: "journal entry",
+  ShortNotes: "note",
   Goals: "goal",
   Ambitions: "goal",
   Todos: "to-do",

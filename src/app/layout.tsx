@@ -6,7 +6,7 @@ const figtree = Figtree({
   display: "swap",
   variable: "--font-figtree",
 });
-// Handwriting is kept for the fridge note and journal pages only.
+// Handwriting is kept for the fridge note only.
 const schoolbell = Schoolbell({
   weight: "400",
   subsets: ["latin"],

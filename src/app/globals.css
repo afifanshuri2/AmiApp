@@ -748,125 +748,112 @@ textarea::placeholder {
   white-space: nowrap;
 }
 
-/* ---------- Journal ---------- */
-.journal {
+/* ---------- Notes chat ---------- */
+.chat {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-}
-.journal-compose {
-  margin: 0;
-  gap: 10px;
+  height: calc(100dvh - 150px);
+  min-height: 360px;
   background: var(--surf);
   border-radius: var(--radius-card);
+  overflow: hidden;
+}
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
   padding: 14px;
-}
-.journal-compose input {
-  font-weight: 700;
-  border: 0;
-  border-bottom: 1.5px solid var(--line);
-  border-radius: 0;
-  padding: 8px 4px;
-  background: none;
-  font-size: 17px;
-}
-.journal-compose textarea {
-  border: 0;
-  background: none;
-  resize: vertical;
-  padding: 6px 4px;
-  font-family: var(--font-schoolbell), cursive;
-  font-size: 18px;
-  line-height: 28px;
-  min-height: 90px;
-}
-.journal-compose button {
-  align-self: flex-end;
-}
-.journal-pages {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  overscroll-behavior: contain;
 }
-.journal-month {
-  font-size: 15px;
+.chat-empty {
+  margin: auto;
   color: var(--muted);
-  font-weight: 600;
-  margin: 12px 4px 8px;
-}
-.page-entry {
-  display: flex;
-  gap: 14px;
-  background: var(--surf);
-  border-radius: 20px;
-  padding: 14px 14px 8px 12px;
-  margin-bottom: 10px;
-  border-left: 5px solid var(--ac);
-  background-image: repeating-linear-gradient(
-    transparent 0 27px,
-    color-mix(in srgb, var(--ink) 6%, transparent) 27px 28px
-  );
-  background-position: 0 44px;
-  background-repeat: repeat-y;
-}
-.page-entry.theirs {
-  border-left-color: var(--c2i);
-}
-.entry-date {
-  width: 46px;
-  flex-shrink: 0;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
 }
-.entry-date b {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -1px;
-}
-.entry-date span {
+.chat-day {
+  align-self: center;
+  text-align: center;
   color: var(--muted);
   font-size: 12px;
-  margin-top: 4px;
+  margin: 12px 0 6px;
 }
-.entry-body {
-  flex: 1;
-  min-width: 0;
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  margin: 2px 0;
 }
-.page-entry h3 {
-  font-size: 18px;
-  font-weight: 700;
+.bubble-wrap.mine {
+  align-items: flex-end;
+}
+.bubble-wrap.theirs {
+  align-items: flex-start;
+}
+.bubble {
+  max-width: min(80%, 460px);
+  border: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 15px;
   overflow-wrap: anywhere;
-}
-.page-entry p {
-  font-family: var(--font-schoolbell), cursive;
-  font-size: 18px;
-  line-height: 28px;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  margin-top: 6px;
 }
-.page-entry footer {
+.bubble.me {
+  background: var(--hero);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+.bubble.them {
+  background: var(--bg);
+  color: var(--ink);
+  border-bottom-left-radius: 6px;
+}
+.bubble b {
+  font-weight: 600;
+}
+.bubble time {
+  font-size: 11px;
+  opacity: 0.7;
+  align-self: flex-end;
+}
+.bubble-actions {
+  display: flex;
+  gap: 2px;
+}
+.composer {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.composer input {
+  border-radius: 24px;
+  background: var(--bg);
+  border: 0;
+  padding: 12px 16px;
+}
+.composer button {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ac);
+  color: var(--bg);
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 4px;
+  justify-content: center;
 }
-.page-entry .author {
-  font-weight: 700;
-  color: var(--ac);
-}
-.page-entry.theirs .author {
-  color: var(--c2i);
-}
-.entry-tools {
-  margin-left: auto;
-  display: flex;
-}
-.entry-tools button {
-  color: var(--muted);
+.composer button:disabled {
+  opacity: 0.4;
 }
 
 /* ---------- Lists ---------- */
@@ -1776,6 +1763,9 @@ textarea::placeholder {
   }
   h1 {
     font-size: 26px;
+  }
+  .chat {
+    height: calc(100dvh - 190px - env(safe-area-inset-bottom));
   }
   .avatar-fields {
     grid-template-columns: 1fr;
